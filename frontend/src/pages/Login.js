@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Lock, User, ShieldCheck } from "lucide-react";
 import bcrypt from "bcryptjs";
+import { Link } from "react-router-dom";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -68,7 +69,7 @@ export default function LoginPage({ onLoginSuccess }) {
         </div>
       )}
       <p className="text-center text-gray-600 mt-4">
-        Don't have an account? <a href="#" className="text-blue-600 hover:underline">Sign up</a>
+        Don't have an account?  <Link to="/signup" className="text-blue-600 hover:underline ml-1">Sign up</Link>
       </p>
     </div>
   );
