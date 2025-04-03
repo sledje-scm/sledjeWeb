@@ -1,16 +1,11 @@
 import React from "react";
-import ReactDOM from "react-dom";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import FeaturePage from "./FeaturePage";
-import LandingPage from "./LandingPage";
+import ReactDOM from "react-dom/client";
 import App from "./App";
+import "./index.css"; // Import global styles if needed
 
-ReactDOM.render(
-  <Router>
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/features" element={<FeaturePage />} />
-    </Routes>
-  </Router>,
-  document.getElementById("root")
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );

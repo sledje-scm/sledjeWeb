@@ -1,36 +1,29 @@
-/* The libraries imported*/
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./db');
 
-/* Instance Created*/
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
+const orderRoutes = require('./routes/orderRoutes2');
+const cartRoutes = require('./routes/cartRoutes');
+
+dotenv.config();
 const app = express();
-app.use(cors());
+
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 
-// Features data
-const features = [
-    { title: "Easy Demand and Supply Track", description: "Track received and left at one click", image: "https://via.placeholder.com/300" },
-    { title: "Order Hassle Free", description: "A brief description of Feature Two.", image: "https://via.placeholder.com/300" },
-    { title: "Credit Payment Gateway", description: "A brief description of Feature Three.", image: "https://via.placeholder.com/300" },
-    { title: "Unique Shelves Integrated", description: "A brief description of Feature Four.", image: "https://via.placeholder.com/300" },
-    { title: "Instant Temporary Loans", description: "A brief description of Feature Five.", image: "https://via.placeholder.com/300" },
-    { title: "Discount Section Retailerwise", description: "A brief description of Feature Six.", image: "https://via.placeholder.com/300" }
-];
+connectDB();
 
-// Endpoint to serve features data
-app.get("/api/features", (req, res) => {
-    res.json(features);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/cart', cartRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
-
-
-app.get("/", (req, res) => {
-    res.send("Backend is running!");
-});
-app.post("/data", (req, res) => {
-    console.log(req.body);
-    res.json({ message: "Data received", data: req.body });
-});
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
