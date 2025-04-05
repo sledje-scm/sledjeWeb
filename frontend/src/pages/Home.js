@@ -22,7 +22,7 @@ export default function LandingPage() {
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
-    navigate("/shelf");
+    navigate("/layout");
   };
 
   return (

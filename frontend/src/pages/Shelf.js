@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, AlertCircle, Search, Mic, List, CreditCard, Package, User, PlusCircle } from "lucide-react";
+import { ShoppingCart, AlertCircle, Search, Mic, PlusCircle } from "lucide-react";
 
 export default function Shelf() {
   const [inventoryItems, setInventoryItems] = useState([
@@ -110,25 +110,6 @@ export default function Shelf() {
         className="fixed bottom-16 right-6 bg-white text-black p-4 rounded-full shadow-lg hover:scale-110 transition-transform duration-300">
         <PlusCircle className="w-6 h-6" />
       </button>
-
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 w-full bg-gray-100 text-black flex justify-around px-6 py-3 shadow-lg">
-        <button onClick={() => window.location.href = '/shop'} className="flex flex-col items-center text-sm text-yellow-400">
-          <List className="w-5 h-5 text-black" /> Shop
-        </button>
-        <button onClick={() => window.location.href = '/shelf'} className="flex flex-col items-center text-sm">
-          <Package className="w-5 h-5 text-black" /> Shelf
-        </button>
-        <button onClick={() => window.location.href = '/payment'} className="flex flex-col items-center text-sm">
-          <CreditCard className="w-5 h-5 text-black" /> Payment
-        </button>
-        <button onClick={() => window.location.href = '/orders'} className="flex flex-col items-center text-sm">
-          <ShoppingCart className="w-5 h-5 text-black" /> Orders
-        </button>
-        <button onClick={() => window.location.href = '/you'} className="flex flex-col items-center text-sm">
-          <User className="w-5 h-5 text-black" /> You
-        </button>
-      </div>
     </div>
   );
 }
