@@ -1,12 +1,33 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { ShoppingCart, Package, CreditCard, User, List } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PlaneLanding, Library, BanknoteArrowUp, Landmark, User, ScanBarcode } from "lucide-react";
+function TogglingPaymentIcon() {
+  const [showFirst, setShowFirst] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowFirst((prev) => !prev);
+    }, 3000); // change every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="transition-opacity duration-500 ease-in-out">
+      {showFirst ? (
+        <BanknoteArrowUp className="w-5 h-5 mb-1" />
+      ) : (
+        <Landmark className="w-5 h-5 mb-1" />
+      )}
+    </div>
+  );
+}
 
 export default function Layout() {
   const navItems = [
-    { name: "Shop", to: "/layout/shop", icon: List },
-    { name: "Shelf", to: "/layout/shelf", icon: Package },
-    { name: "Payment", to: "/layout/payment", icon: CreditCard },
-    { name: "Orders", to: "/layout/orders", icon: ShoppingCart },
+    { name: "Shop", to: "/layout/shop", icon: ScanBarcode },
+    { name: "Shelf", to: "/layout/shelf", icon: Library },
+    { name: "Payment", to: "/layout/payment", icon: TogglingPaymentIcon },
+    { name: "Orders", to: "/layout/orders", icon: PlaneLanding },
     { name: "You", to: "/layout/you", icon: User }
   ]
   return (
@@ -15,7 +36,7 @@ export default function Layout() {
       <Outlet />
 
       {/* Bottom Navigation */}
-      <div className="fixed w-full bg-gray-100 text-black flex justify-around px-4 shadow-lg border-t 
+      <div className="fixed w-full bg-gray-100 text-black flex justify-around px-4 shadow-md border-t 
   bottom-0 sm:top-0 sm:bottom-auto sm:border-b sm:border-t-0">
       {navItems.map(({ name, to, icon: Icon }, index) => (
   <div key={to} className={`flex-1 ${index !== 0 ? "border-l" : ""}`}>

@@ -68,8 +68,9 @@ export default function Shelf() {
             placeholder="Search inventory..."
             className="flex-1 outline-none px-2 bg-transparent text-gray-900 text-sm"
           />
-          <button className="p-2 rounded-full shadow-sm bg-gray-200" onClick={startVoiceSearch}>
-            <Mic className="w-5 h-5 text-gray-500" />
+          <button className="p-2 px-3 rounded-full shadow-sm bg-blue-500 text-white flex items-center space-x-1" onClick={startVoiceSearch}>
+            <span className="text-xs">Use voice input</span>
+            <Mic className="w-5 h-5" />
           </button>
         </div>
         <button onClick={() => window.location.href = '/orders'} className="ml-4 px-4 py-2 bg-white text-black rounded-lg shadow-md relative hover:scale-105">
@@ -83,22 +84,22 @@ export default function Shelf() {
       {/* Inventory Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-white p-6 shadow-lg rounded-lg transition-transform transform hover:scale-105 flex flex-col justify-between h-40">
+          <div key={item.id} className="bg-white p-6 shadow-lg rounded-lg transition-transform transform hover:scale-105 flex flex-col justify-between h-23">
             <div>
-              <h3 className="text-md font-medium text-gray-800">{item.name}</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-md font-medium text-gray-800">{item.name}</h3>
+                <input
+                  type="number"
+                  min="1"
+                  className="border p-1 w-16 text-center text-sm rounded-md"
+                  placeholder="Qty"
+                  onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                />
+              </div>
               <p className={`text-xs flex items-center ${item.stock < 10 ? "text-red-500" : "text-green-600"}`}>
                 <AlertCircle className="w-4 h-4 mr-1" /> Stock: {item.stock}
               </p>
               <p className="text-gray-600 text-xs">Distributor: {item.distributor}</p>
-            </div>
-            <div className="flex justify-between items-center mt-4">
-              <input
-                type="number"
-                min="1"
-                className="border p-2 w-16 text-center text-sm rounded-md"
-                placeholder="Qty"
-                onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-              />
             </div>
           </div>
         ))}
