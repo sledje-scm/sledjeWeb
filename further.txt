@@ -1,0 +1,18 @@
+update stock in inverory upon completion of order
+each days transaction be shared via gmail and also monthly gmail edit
+
+
+for fetching data in orders page:
+
+const [data, setData] = useState([]); // Initialize state as an empty array
+
+useEffect(() => {
+  fetch('your-api-endpoint') // Replace with your actual API endpoint
+    .then(response => response.json()) // Parse the response as JSON
+    .then(data => {
+      setData(data); // Update the state with the parsed JSON data
+    })
+    .catch(error => {
+      console.error("Error fetching data:", error);
+    });
+}, []); // Empty dependency array ensures this effect runs only once on mount
