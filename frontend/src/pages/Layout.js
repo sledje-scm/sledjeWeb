@@ -36,7 +36,7 @@ export default function Layout() {
       <Outlet />
 
       {/* Bottom Navigation */}
-      <div className="fixed w-full bg-gray-100 text-black flex justify-around px-4 shadow-md border-t 
+      <div className="fixed w-full bg-gray-100 text-black flex justify-around px-4 shadow-md border-t transition-all duration-800
   bottom-0 sm:top-0 sm:bottom-auto sm:border-b sm:border-t-0">
       {navItems.map(({ name, to, icon: Icon }, index) => (
   <div key={to} className={`flex-1 ${index !== 0 ? "border-l" : ""}`}>
@@ -45,8 +45,8 @@ export default function Layout() {
       className={({ isActive }) =>
         `flex flex-col items-center justify-center py-2 font-medium  duration-300 ${
           isActive
-            ? "border-t-4 bg-gray-300 text-gray-900 sm:border-b-4 sm:border-t-0"
-            : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+            ? "border-t-4 border-t-gray-500 border-b-gray-500 bg-gray-300 text-gray-900 sm:border-b-4 sm:border-t-0"
+            : "text-gray-600 bg-gray-100 hover:bg-gray-200 border-t-white border-b-white sm:border-b-4"
         }`
       }
     >
