@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShoppingCart, AlertCircle, Search, Mic, PlusCircle } from "lucide-react";
+import addToCartAlert from "./addToCartAlert";
 
 export default function Shelf() {
   const [inventoryItems, setInventoryItems] = useState([
@@ -33,7 +34,7 @@ export default function Shelf() {
 
   const addToCart = () => {
     setCartCount(Object.keys(selectedItems).length);
-    alert("Items added to cart!");
+    addToCartAlert();
   };
 
   const handleSearch = (query) => {
@@ -73,7 +74,7 @@ export default function Shelf() {
             <Mic className="w-5 h-5" />
           </button>
         </div>
-        <button onClick={() => window.location.href = '/orders'} className="ml-4 px-4 py-2 bg-white text-black rounded-lg shadow-md relative hover:scale-105">
+        <button onClick={() => window.location.href = '/layout/orders'} className="ml-4 px-4 py-2 bg-white text-black rounded-lg shadow-md relative hover:scale-105">
           <ShoppingCart className="w-6 h-6 text-black" />
           {cartCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">{cartCount}</span>

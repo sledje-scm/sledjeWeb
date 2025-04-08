@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Layout from './pages/Layout';
+import addToCartAlert from './pages/addToCartAlert';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route index element={<Navigate to="/layout/shop" />} />
           <Route path="shop" element={<Shop />} />
           <Route path="shelf" element={<Shelf />} />
+            <Route path="addToCartAlert" element={<addToCartAlert />} />
           <Route path="payment" element={<Payment />} />
           <Route path="orders" element={<Orders />} />
           <Route path="you" element={<You />} />
