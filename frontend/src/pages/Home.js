@@ -29,7 +29,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white text-gray-900">
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 w-full flex justify-between items-center p-4 bg-white shadow-md z-10 transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}>
-        <h1 className="text-4xl font-black text-blue-900 tracking-wide">RetailBridge</h1>
+        <h1 className="text-4xl font-black text-blue-900 tracking-wide">Sledge Solutions</h1>
         <div>
           <button 
             onClick={() => setShowLoginModal(true)}
@@ -80,7 +80,7 @@ export default function LandingPage() {
       <footer className="bg-gray-900 text-gray-300 py-10 mt-12">
         <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           <div>
-            <h3 className="text-xl font-bold text-white">RetailBridge</h3>
+            <h3 className="text-xl font-bold text-white">Sledge Solutions</h3>
             <p className="mt-2">Connecting retailers with distributors for seamless business management.</p>
           </div>
           <div>
@@ -94,13 +94,13 @@ export default function LandingPage() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Contact Us</h3>
-            <p className="mt-2">Email: support@retailbridge.com</p>
+            <p className="mt-2">Email: support@Sledge Solutions.com</p>
             <p>Phone: +1 234 567 890</p>
             <p>Address: 123 Business Street, City, Country</p>
           </div>
         </div>
         <div className="text-center mt-8 text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} RetailBridge. All rights reserved.
+          &copy; {new Date().getFullYear()} Sledge Solutions. All rights reserved.
         </div>
       </footer>
     </div>

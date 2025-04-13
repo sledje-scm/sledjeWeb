@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Lock, User, ShieldCheck } from "lucide-react";
 import bcrypt from "bcryptjs";
 import { Link } from "react-router-dom";
+import API from "../api"; 
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -10,9 +11,21 @@ export default function LoginPage({ onLoginSuccess }) {
   const [step, setStep] = useState(1);
 
   const handleLogin = async () => {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Logging in with", email, hashedPassword);
-    setStep(2);
+    try {
+      const { data } = await API.post('/retailers/login', {
+        email,
+        password,
+      });
+  
+      console.log('Logged in:', data);
+      // You can store the token or user data as needed
+      localStorage.setItem('userInfo', JSON.stringify(data));
+      onLoginSuccess();
+      // For OTP verification step (optional)
+      //setStep(2); // Or call onLoginSuccess() directly if you’re not using OTP
+    } catch (error) {
+      alert(error.response?.data?.message || 'Login failed');
+    }
   };
 
   const verifyOtp = () => {

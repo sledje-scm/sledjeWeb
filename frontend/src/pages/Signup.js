@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import bcrypt from "bcryptjs";
+import API from "../api";
 
-export default function SignUpPage() {
+export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -11,6 +12,26 @@ export default function SignUpPage() {
   const [gstNumber, setGstNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1);
+  const [businessType, setBusinessType] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [location, setLocation] = useState("");
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords = `${position.coords.latitude},${position.coords.longitude}`;
+          setLocation(coords);
+        },
+        (error) => {
+          console.error("Error fetching location:", error);
+          alert("Please enable location services to auto-fill location.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser");
+    }
+  }, []);
   
   const handleSignUp = async () => {
     if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
@@ -29,9 +50,26 @@ export default function SignUpPage() {
       alert("Passwords do not match");
       return;
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Signing up with", email, hashedPassword);
-    setStep(2);
+    try {
+      const res = await API.post("/retailers/register", {
+        businessName,
+        ownerName,
+        email,
+        password, // don't haimport retailerRoutes from './routes/retailerRoutes.js';sh on frontend — let backend handle it securely
+        phone,
+        gstNumber,
+        businessType,
+        pincode,
+        location,
+      });
+  
+      alert("Registration successful!");
+      localStorage.setItem("token", res.data.token); // if backend sends token
+      setStep(2); // move to OTP step
+    } catch (err) {
+      alert(err.response?.data?.message || "Registration failed");
+      console.error(err);
+    }
   };
 
   const verifyOtp = () => {
@@ -51,7 +89,10 @@ export default function SignUpPage() {
               { label: "Email", value: email, setter: setEmail, type: "email", placeholder: "Enter email address" },
               { label: "Password", value: password, setter: setPassword, type: "password", placeholder: "Enter password" },
               { label: "Confirm Password", value: confirmPassword, setter: setConfirmPassword, type: "password", placeholder: "Confirm password" },
-              { label: "GST Number (if applicable)", value: gstNumber, setter: setGstNumber, type: "text", placeholder: "Enter GST number" }
+              
+              { label: "GST Number", value: gstNumber, setter: setGstNumber, type: "text", placeholder: "Enter GST number (optional)" },
+              { label: "Business Type", value: businessType, setter: setBusinessType, type: "text", placeholder: "Select business type" },
+              { label: "Pincode", value: pincode, setter: setPincode, type: "text", placeholder: "Enter pincode" },
             ].map(({ label, value, setter, type, placeholder }, index) => (
               <div key={index} className="flex items-center">
                 <label className="w-1/3 text-gray-700 font-semibold">{label}:</label>

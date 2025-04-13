@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 import Layout from './pages/Layout';
+import API from './api';
 import addToCartAlert from './pages/addToCartAlert';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/layout" element={<Layout />}>
           <Route index element={<Navigate to="/layout/shop" />} />
           <Route path="shop" element={<Shop />} />
+          <Route path="api" element={<API />} />
           <Route path="shelf" element={<Shelf />} />
             <Route path="addToCartAlert" element={<addToCartAlert />} />
           <Route path="payment" element={<Payment />} />

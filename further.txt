@@ -1,8 +1,13 @@
-update stock in inverory upon completion of order
+update stock in inverory upon compltion of order
 each days transaction be shared via gmail and also monthly gmail edit
+add a expiry field as wellS
 
+the quantity in shelf should fetch value from orders so as for the retailer to know that the item is already ordered
+constraints
+if order on way has left the warehouse .. it need to be handled separately
 
 for fetching data in orders page:
+
 
 const [data, setData] = useState([]); // Initialize state as an empty array
 
