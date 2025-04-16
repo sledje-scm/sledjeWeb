@@ -9,7 +9,7 @@ const distributorSchema = new mongoose.Schema({
     address: String,
     location: String,   
     phone: String,
-    products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+    // products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],use differenet prodcut inventory for distributor
   }, { timestamps: true });
   
   module.exports = mongoose.model("Distributor", distributorSchema);

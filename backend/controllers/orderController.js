@@ -1,114 +1,118 @@
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
-import Retailer from '../models/Retailer.js';
-import Distributor from '../models/Distributor.js';
+const Order = require('../models/Order');
+const Product = require('../models/Product');
 
-// Get pending orders
-export const getPendingOrders = async (req, res) => {
-  const orders = await Order.find({ retailer: req.user._id, status: 'Pending' }).populate('items.product distributor');
-  res.json(orders);
-};
-
-// Update item quantities, rates in an order
-export const updateOrderItem = async (req, res) => {
-  const { id } = req.params;
-  const { items } = req.body;
-
-  const order = await Order.findOne({ _id: id, retailer: req.user._id });
-  if (!order) return res.status(404).json({ message: 'Order not found' });
-
-  order.items = items;
-  order.totalPrice = items.reduce((acc, item) => acc + item.price, 0);
-  await order.save();
-
-  res.json(order);
-};
-
-// Move selected orders to Ready
-export const moveToReady = async (req, res) => {
-  const { orderIds } = req.body; // array of order _id
-
-  const updated = await Order.updateMany(
-    { _id: { $in: orderIds }, retailer: req.user._id },
-    { $set: { status: 'Ready' } }
-  );
-
-  res.json({ message: 'Moved to Ready', updated });
-};
-
-// Get Ready orders grouped by distributor
-export const getReadyOrders = async (req, res) => {
-  const orders = await Order.find({ retailer: req.user._id, status: 'Ready' }).populate('items.product distributor');
-  res.json(orders);
-};
-
-// Place order (moves to OnWay)
-export const placeOrder = async (req, res) => {
-  const { orderIds } = req.body;
-
-  const updated = await Order.updateMany(
-    { _id: { $in: orderIds }, retailer: req.user._id },
-    { $set: { status: 'OnWay' } }
-  );
-
-  res.json({ message: 'Orders placed', updated });
-};
-
-// Get OnWay orders
-export const getOnWayOrders = async (req, res) => {
-  const orders = await Order.find({ retailer: req.user._id, status: 'OnWay' }).populate('items.product distributor');
-  res.json(orders);
-};
-
-// Create multiple orders for different distributors
-export const createMultiDistributorOrder = async (req, res) => {
+// Get all orders
+exports.getOrders = async (req, res) => {
   try {
-    const { retailerId, groupedItems } = req.body;
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
-    let totalPrice = 0;
-    const processedGroups = [];
-
-    for (const group of groupedItems) {
-      const { distributorId, items } = group;
-      let distributorTotal = 0;
-      const validatedItems = [];
-
-      for (const item of items) {
-        const product = await Product.findById(item.productId);
-        if (!product || product.distributorId.toString() !== distributorId) {
-          return res.status(400).json({ message: "Invalid product or distributor mismatch" });
-        }
-
-        const total = product.price * item.quantity;
-        distributorTotal += total;
-
-        validatedItems.push({
-          productId: product._id,
-          quantity: item.quantity,
-          rate: product.price,
-          total
-        });
-      }
-
-      totalPrice += distributorTotal;
-      processedGroups.push({
-        distributorId,
-        items: validatedItems,
-        distributorTotal
-      });
+// Get a single order by ID
+exports.getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
     }
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
+// Create a new order
+exports.createOrder = async (req, res) => {
+  try {
+    const { items, notes } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Order must contain items' });
+    }
+    
+    // Calculate total amount
+    const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    
+    // Create order
     const newOrder = new Order({
-      retailerId,
-      groupedItems: processedGroups,
-      totalPrice
+      items,
+      totalAmount,
+      notes
     });
+    
+    // Save order
+    const savedOrder = await newOrder.save();
+    
+    // Update stock for each item
+    for (const item of items) {
+      await Product.findOneAndUpdate(
+        { _id: item.productId, 'variants._id': item.variantId },
+        { $inc: { 'variants.$.stock': -item.quantity } }
+      );
+    }
+    
+    res.status(201).json(savedOrder);
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(400).json({ message: 'Invalid data', error: error.message });
+  }
+};
 
-    await newOrder.save();
-    res.status(201).json(newOrder);
+// Update order status
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedOrder) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(400).json({ message: 'Invalid data', error: error.message });
+  }
+};
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error creating multi-distributor order" });
+// Cancel an order and restore stock
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ message: 'Order is already cancelled' });
+    }
+    
+    // Update order status
+    order.status = 'cancelled';
+    await order.save();
+    
+    // Restore stock for each item
+    for (const item of order.items) {
+      await Product.findOneAndUpdate(
+        { _id: item.productId, 'variants._id': item.variantId },
+        { $inc: { 'variants.$.stock': item.quantity } }
+      );
+    }
+    
+    res.status(200).json(order);
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

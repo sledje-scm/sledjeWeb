@@ -8,6 +8,9 @@ if order on way has left the warehouse .. it need to be handled separately
 
 for fetching data in orders page:
 
+order in payments section should have a bundles red stamp ...just to give feel
+cards of oders in shelf should have a ordered stamp to give feel
+
 
 const [data, setData] = useState([]); // Initialize state as an empty array
 
@@ -21,3 +24,7 @@ useEffect(() => {
       console.error("Error fetching data:", error);
     });
 }, []); // Empty dependency array ensures this effect runs only once on mount
+
+
+
+the inventory should have column for ordered items
