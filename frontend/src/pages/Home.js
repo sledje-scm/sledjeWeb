@@ -4,10 +4,15 @@ import { Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, CreditCard, Package, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Login from "./Login";
+import logo from "../assets/navBarLogo.png";
+import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+
 
 export default function LandingPage() {
   const [showNavbar, setShowNavbar] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
   let lastScrollY = 0;
 
@@ -24,24 +29,11 @@ export default function LandingPage() {
     setShowLoginModal(false);
     navigate("/layout");
   };
-
   return (
     <div className="min-h-screen bg-white text-gray-900">
       {/* Navbar */}
-      <nav className={`fixed top-0 left-0 w-full flex justify-between items-center p-4 bg-white shadow-md z-10 transition-transform duration-300 ${showNavbar ? "translate-y-0" : "-translate-y-full"}`}>
-        <h1 className="text-4xl font-black text-blue-900 tracking-wide">Sledge Solutions</h1>
-        <div>
-          <button 
-            onClick={() => setShowLoginModal(true)}
-            className="mr-4 bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 transition-transform">
-            Login
-          </button>
-          <button className="bg-gray-200 text-gray-900 px-5 py-3 rounded-md shadow-md hover:bg-gray-300">
-            <Layers className="w-5 h-5" />
-          </button>
-        </div>
-      </nav>
-      
+      <Navbar onLoginClick={() => setShowLoginModal(true)} />
+        
       {/* Hero Section */}
       <section className="relative text-left py-48 px-12 text-gray-900 mt-16 flex flex-col items-start justify-center bg-cover bg-center" style={{ backgroundImage: "url('https://www.sap.com/dam/application/shared/photos/homepage/business-unleashed-feb-20.jpg')" }}>
         <div className="max-w-4xl">

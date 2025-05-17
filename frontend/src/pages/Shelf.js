@@ -341,99 +341,93 @@ export default function Shelf() {
 
   return (
     <div className="min-h-screen relative font-sans">
-      {/* Sticky header that shows/hides based on scroll direction */}
-      <div 
-        className={`fixed top-0 left-0 right-0 bg-white z-50  ${
-          showHeader ? 'translate-y-20 ' : '-translate-y-full'
-        }`}
-      >
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between gap-4">
-            {/* Search bar with voice input inside */}
-            <div className="relative flex-1 max-w-lg shadow-inner">
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDownCapture={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch(e.target.value);
-                  }
-                }}
-              />
-              <Search className="absolute left-3 top-3.5 text-gray-400 h-5 w-5" />
-              <button 
-                className="absolute right-1 top-1 bottom-1 p-1 px-2 rounded-full bg-blue-700 text-white hover:bg-blue-600 shadow-inner transition-colors flex items-center gap-3"
-                onClick={startVoiceSearch}
-              >
-                <span className="text-xs">Use voice input</span>
-                <Mic className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {/* Cart button */}
-            <button 
-              className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg relative hover:bg-blue-700 transition-colors shadow-md"
-              onClick={() => setShowCart(!showCart)}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              <span>Cart</span>
-              {cartItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {cartItems.length}
-                </span>
-              )}
-            </button>
-          </div>
+      {/* Filter Buttons (Extreme Left) */}
+      <div className="fixed top-20 left-0 z-50 py-3 px-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setFilterType("all")}
+            className={`px-4 py-2 rounded-xl ${
+              filterType === "all"
+                ? "bg-blue-800 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
+            } transition-all`}
+          >
+            All Items
+          </button>
+          <button
+            onClick={() => setFilterType("low-stock")}
+            className={`px-4 py-2 rounded-xl ${
+              filterType === "low-stock"
+                ? "bg-yellow-500 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
+            } transition-all`}
+          >
+            Low Stock
+          </button>
+          <button
+            onClick={() => setFilterType("out-of-stock")}
+            className={`px-4 py-2 rounded-xl ${
+              filterType === "out-of-stock"
+                ? "bg-red-500 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
+            } transition-all`}
+          >
+            Out of Stock
+          </button>
+          <button
+            onClick={toggleHiddenColumns}
+            className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1 hover:bg-gray-50 shadow-sm transition-all"
+          >
+            <Filter className="h-4 w-4" />
+            {showHiddenColumns ? "Hide" : "Show"} SKU/Expiry
+          </button>
         </div>
       </div>
-          
-      <div className="container mx-auto px-4 py-8 mt-16">
-        {/* Filter options */}
-        <div className="mb-6 flex flex-col md:flex-row justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
+
+      {/* Search Bar and Cart (Extreme Right) */}
+      <div className="fixed top-20 right-0 z-50 py-3 px-4">
+        <div className="flex items-center space-x-4">
+          {/* Search Bar */}
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="w-64 pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDownCapture={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch(e.target.value);
+                }
+              }}
+            />
+            <Search className="absolute left-3 text-gray-400 h-5 w-5" />
             <button
-              onClick={() => setFilterType("all")}
-              className={`px-4 py-2 rounded-xl ${
-                filterType === "all" 
-                  ? "bg-blue-800 text-white shadow-md" 
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
-              } transition-all`}
+              className="absolute right-2 bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-500 transition"
+              onClick={startVoiceSearch}
             >
-              All Items
-            </button>
-            <button
-              onClick={() => setFilterType("low-stock")}
-              className={`px-4 py-2 rounded-xl ${
-                filterType === "low-stock" 
-                  ? "bg-yellow-500 text-white shadow-md" 
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
-              } transition-all`}
-            >
-              Low Stock
-            </button>
-            <button
-              onClick={() => setFilterType("out-of-stock")}
-              className={`px-4 py-2 rounded-xl ${
-                filterType === "out-of-stock" 
-                  ? "bg-red-500 text-white shadow-md" 
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm"
-              } transition-all`}
-            >
-              Out of Stock
-            </button>
-            <button
-              onClick={toggleHiddenColumns}
-              className="px-4 py-2 rounded-xl bg-white text-gray-700 border border-gray-200 flex items-center gap-1 hover:bg-gray-50 shadow-sm transition-all"
-            >
-              <Filter className="h-4 w-4" />
-              {showHiddenColumns ? "Hide" : "Show"} SKU/Expiry
+              <Mic className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Cart Button */}
+          <button
+            className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
+            onClick={() => setShowCart(!showCart)}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <span>Cart</span>
+            {cartItems.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {cartItems.length}
+              </span>
+            )}
+          </button>
         </div>
-        
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 mt-32">
         {/* Category Navigation */}
         <div className="sticky top-16 z-10 overflow-x-auto py-3 border-b mb-6">
           <div className="flex gap-4">
