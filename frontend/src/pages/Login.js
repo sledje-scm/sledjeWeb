@@ -1,28 +1,38 @@
+
 import { useState } from "react";
 import { Lock, User, ShieldCheck } from "lucide-react";
-import bcrypt from "bcryptjs";
-import { Link } from "react-router-dom";
-import API from "../api"; 
+import { Link, useNavigate } from "react-router-dom";
+import API from "../api";
 
-export default function LoginPage({ onLoginSuccess }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
+export default function LoginPage() {
+  const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState(""); 
+  const [otp, setOtp] = useState(""); 
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+
+  // Flag to control whether we are in test mode or real login mode
+  const isTestMode = true; // Set to `true` for testing, `false` for real login
 
   const handleLogin = async () => {
     try {
+      if (isTestMode) {
+        // Skip the actual login process for testing
+        console.log('Test mode - bypassing login.');
+        localStorage.setItem('userInfo', JSON.stringify({ username: 'Test User', token: 'fake-token' }));
+        navigate("/layout"); // Redirect to the layout page directly
+        return;
+      }
+
+      // Real login flow
       const { data } = await API.post('/retailers/login', {
         email,
         password,
       });
-  
+
       console.log('Logged in:', data);
-      // You can store the token or user data as needed
       localStorage.setItem('userInfo', JSON.stringify(data));
-      onLoginSuccess();
-      // For OTP verification step (optional)
-      //setStep(2); // Or call onLoginSuccess() directly if you’re not using OTP
+      navigate("/layout"); // Redirect to the layout page after login
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed');
     }
@@ -30,7 +40,6 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const verifyOtp = () => {
     console.log("Verifying OTP", otp);
-    onLoginSuccess();
   };
 
   return (
@@ -59,7 +68,10 @@ export default function LoginPage({ onLoginSuccess }) {
               className="flex-1 bg-transparent focus:outline-none"
             />
           </div>
-          <button onClick={handleLogin} className="w-full bg-gradient-to-r from-blue-700 to-indigo-900 text-white py-3 rounded-md shadow-md text-lg font-semibold hover:scale-105 transition-transform">
+          <button 
+            onClick={handleLogin} // Call handleLogin instead of onLoginSuccess
+            className="w-full bg-gradient-to-r from-blue-700 to-indigo-900 text-white py-3 rounded-md shadow-md text-lg font-semibold hover:scale-105 transition-transform"
+          >
             Next
           </button>
         </div>
