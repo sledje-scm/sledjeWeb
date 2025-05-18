@@ -22,7 +22,8 @@
     "tailwind-merge": "^3.1.0",
     "tailwind-variants": "^1.0.0",
     "tw-animate-css": "^1.2.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "words-to-numbers": "^1.5.1"
   },
   "proxy": "http://localhost:5000/",
   "scripts": {
