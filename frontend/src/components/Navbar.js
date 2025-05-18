@@ -4,7 +4,7 @@ import logo from "../assets/navBarLogo.png";
 import { Layers } from "lucide-react";
 
 
-export default function Navbar() {
+export default function Navbar({ onLoginClick }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -16,12 +16,6 @@ export default function Navbar() {
 
   const closeDropdown = () => {
     setOpenDropdown(null);
-  };
-
-  // Update onLoginClick to use navigate for redirection
-  const onLoginClick = () => {
-    // Navigate to the login page
-    navigate("/login");
   };
 
   // Scroll listener logic
@@ -171,7 +165,7 @@ export default function Navbar() {
         {/* Login + Menu */}
         <div className="flex items-center space-x-4">
           <button
-            onClick={onLoginClick} // This now navigates to login page
+            onClick={onLoginClick} // Use the prop instead of internal function
             className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 transition"
           >
             Login
@@ -184,10 +178,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
-
-
-
-
-
-

@@ -204,7 +204,7 @@ const Shop = () => {
 	};
 
 	return (
-		<div className="pt-20 pb-16 px-6 space-y-8 bg-white min-h-screen">
+		<div className=" pb-16 px-6 space-y-8 bg-white min-h-screen">
 			<div className="flex justify-between items-center">
 				<h1 className="text-3xl font-bold">Shop Dashboard</h1>
 				<button

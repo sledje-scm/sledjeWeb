@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, Plus, Minus, Mic, ShoppingCart, X, ChevronRight } from "lucide-react";
+import API from "../api"; 
 
 export default function Shelf() {
   const [hoveredRow, setHoveredRow] = useState(null);
@@ -13,6 +14,10 @@ export default function Shelf() {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [productData, setProductData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,7 +32,7 @@ export default function Shelf() {
       
       setLastScrollY(currentScrollY);
     };
-    
+    fetchProducts();
     window.addEventListener("scroll", handleScroll, { passive: true });
     
     return () => {
@@ -59,60 +64,75 @@ export default function Shelf() {
     "Office Supplies"
   ];
 
-  // Sample product data
-  const productData = [
-    {
-      id: 1,
-      name: "Smartphone X",
-      icon: "📱",
-      distributor: "TechGlobal",
-      category: "Electronics",
-      variants: [
-        { id: 1, name: "64GB Black", stock: 15, price: 699, expiry: "N/A", sku: "SMX-64-B" },
-        { id: 2, name: "128GB Black", stock: 8, price: 799, expiry: "N/A", sku: "SMX-128-B" },
-        { id: 3, name: "64GB White", stock: 2, price: 699, expiry: "N/A", sku: "SMX-64-W" },
-        { id: 4, name: "128GB White", stock: 0, price: 799, expiry: "N/A", sku: "SMX-128-W" }
-      ]
-    },
-    {
-      id: 2,
-      name: "Bluetooth Headphones",
-      icon: "🎧",
-      distributor: "AudioTech",
-      category: "Electronics",
-      variants: [
-        { id: 1, name: "Black", stock: 25, price: 129, expiry: "N/A", sku: "BH-BLK" },
-        { id: 2, name: "White", stock: 18, price: 129, expiry: "N/A", sku: "BH-WHT" },
-        { id: 3, name: "Blue", stock: 5, price: 129, expiry: "N/A", sku: "BH-BLU" }
-      ]
-    },
-    {
-      id: 3,
-      name: "Cotton T-Shirt",
-      icon: "👕",
-      distributor: "FashionWear",
-      category: "Clothing",
-      variants: [
-        { id: 1, name: "Small White", stock: 30, price: 19.99, expiry: "N/A", sku: "CT-S-W" },
-        { id: 2, name: "Medium White", stock: 25, price: 19.99, expiry: "N/A", sku: "CT-M-W" },
-        { id: 3, name: "Large White", stock: 20, price: 19.99, expiry: "N/A", sku: "CT-L-W" },
-        { id: 4, name: "Small Black", stock: 30, price: 19.99, expiry: "N/A", sku: "CT-S-B" },
-        { id: 5, name: "Medium Black", stock: 20, price: 19.99, expiry: "N/A", sku: "CT-M-B" },
-        { id: 6, name: "Large Black", stock: 15, price: 19.99, expiry: "N/A", sku: "CT-L-B" }
-      ]
-    },
-    {
-      id: 4,
-      name: "Organic Milk",
-      icon: "🥛",
-      distributor: "FarmFresh",
-      category: "Groceries",
-      variants: [
-        { id: 1, name: "1 Liter", stock: 40, price: 3.99, expiry: "2025-05-15", sku: "OM-1L" },
-        { id: 2, name: "2 Liter", stock: 25, price: 6.99, expiry: "2025-05-15", sku: "OM-2L" }
-      ]
+
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null); // Clear any previous errors
+      
+      const response = await API.get(`/products`);
+      
+      // If the response is 204 No Content, use mock data or handle empty state
+      // For now, use an empty array as a fallback for demonstration
+      const data = response === null || response === undefined ? [] : 
+        Array.isArray(response) ? response : 
+        response.data ? response.data : [];
+      
+      // Validate that data is an array before proceeding
+      if (!Array.isArray(data)) {
+        throw new Error('Received invalid product data format');
+      }
+      
+      // If data is empty, you might want to show a different message to users
+      if (data.length === 0) {
+        console.log("No products found in the response");
+        // You could set a different state here to show "No products found" UI
+      }
+      
+      setProductData(data);
+      
+      // Initialize order quantities based on fetched products
+      const initialQuantities = {};
+      data.forEach(product => {
+        // Check if product has variants array before iterating
+        if (product && Array.isArray(product.variants)) {
+          product.variants.forEach(variant => {
+            if (product.id && variant.id) {
+              initialQuantities[`${product.id}-${variant.id}`] = {
+                quantity: 0,
+                unit: "box"
+              };
+            }
+          });
+        }
+      });
+      
+      setOrderQuantities(initialQuantities);
+      
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError(error.message || "Failed to fetch products");
+    } finally {
+      // Ensure loading state is always turned off
+      setIsLoading(false);
     }
-  ];
+  };
+  const updateStockInBackend = async (productId, variantId, newStock) => {
+    try {
+      const response = await API.post(`/products/${productId}/variants/${variantId}/stock`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (err) {
+      console.error("Error updating stock:", err);
+      throw err;
+    }
+  };
+
 
   const toggleHiddenColumns = () => {
     setShowHiddenColumns(!showHiddenColumns);
@@ -172,6 +192,42 @@ export default function Shelf() {
       total += orderQuantities[key]?.quantity || 0;
     });
     return total;
+  };
+
+  const submitOrder = async () => {
+    try {
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          unit: item.unit
+        })),
+        totalPrice: parseFloat(getCartTotal())
+      };
+      
+      // Send order to backend
+      const response = await API.post(`/orders`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      // Clear cart after successful order
+      setCartItems([]);
+      setShowCart(false);
+      
+      // Refresh products to get updated stock
+      fetchProducts();
+      
+      return result;
+    } catch (err) {
+      console.error("Error submitting order:", err);
+      throw err;
+    }
   };
 
   // Check if product has any low stock or out of stock variants
@@ -259,6 +315,16 @@ export default function Shelf() {
     setShowCart(true);
   };
 
+  // Add a checkout function
+  const handleCheckout = async () => {
+    try {
+      const orderResult = await submitOrder();
+      alert(`Order #${orderResult.orderId} submitted successfully!`);
+    } catch (err) {
+      alert(`Failed to submit order: ${err.message}`);
+    }
+  };
+
   const removeFromCart = (itemId) => {
     setCartItems(prev => prev.filter(item => item.id !== itemId));
   };
@@ -341,7 +407,26 @@ export default function Shelf() {
 
   return (
     <div className="min-h-screen relative font-sans">
-      {/* Filter Buttons (Extreme Left) */}
+      
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-xl font-medium">Loading inventory data...</div>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-xl font-medium text-red-600">
+            Error loading data: {error}
+            <button 
+              onClick={fetchProducts}
+              className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      ) : (
+        
+        <>
       <div className="fixed top-20 left-0 z-50 py-3 px-4">
         <div className="flex items-center space-x-4">
           <button
@@ -427,9 +512,9 @@ export default function Shelf() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 mt-32">
+      <div className="container mx-auto px-4 py-8 mt-8">
         {/* Category Navigation */}
-        <div className="sticky top-16 z-10 overflow-x-auto py-3 border-b mb-6">
+        <div className="sticky z-10 overflow-x-auto py-3 border-b mb-6">
           <div className="flex gap-4">
             {categories.map(category => (
               <button
@@ -697,8 +782,17 @@ export default function Shelf() {
                 ))}
               </tbody>
             </table>
+            <button
+    onClick={handleCheckout}
+    className="mt-4 w-full bg-blue-800 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+    disabled={cartItems.length === 0}
+  >
+    Checkout (${getCartTotal()})
+  </button>
           </div>
           </div>
           </div>
+          </>
+      )}
           </div>
         )}

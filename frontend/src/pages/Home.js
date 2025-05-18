@@ -1,37 +1,22 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, CreditCard, Package, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Login from "./Login";
-import logo from "../assets/navBarLogo.png";
-import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
-
 export default function LandingPage() {
-  const [showNavbar, setShowNavbar] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
-  let lastScrollY = 0;
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowNavbar(window.scrollY < lastScrollY);
-      lastScrollY = window.scrollY;
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
     navigate("/layout");
   };
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Navbar */}
+      {/* Navbar with login modal trigger */}
       <Navbar onLoginClick={() => setShowLoginModal(true)} />
         
       {/* Hero Section */}
@@ -45,7 +30,7 @@ export default function LandingPage() {
 
       {/* Login Modal */}
       {showLoginModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-lg" onClick={() => setShowLoginModal(false)}>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-lg z-50" onClick={() => setShowLoginModal(false)}>
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <Login onLoginSuccess={handleLoginSuccess} />
           </div>
@@ -86,7 +71,7 @@ export default function LandingPage() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Contact Us</h3>
-            <p className="mt-2">Email: support@Sledge Solutions.com</p>
+            <p className="mt-2">Email: support@SledgeSolutions.com</p>
             <p>Phone: +1 234 567 890</p>
             <p>Address: 123 Business Street, City, Country</p>
           </div>
