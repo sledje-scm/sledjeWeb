@@ -1,72 +1,64 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const VariantSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+  id: { 
+    type: Number, 
+    required: true 
   },
-  stock: {
-    type: Number,
-    required: true,
-    min: 0,
-    default: 0
+  name: { 
+    type: String, 
+    required: true 
   },
-  price: {
-    type: Number,
-    required: true,
-    min: 0
+  stock: { 
+    type: Number, 
+    default: 0 
   },
-  expiry: {
-    type: String,
-    default: 'N/A'
+  sellingPrice: { 
+    type: Number, 
+    required: true 
   },
-  sku: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
+  costPrice: { 
+    type: Number, 
+    required: true 
+  },
+  expiry: { 
+    type: String, 
+    default: 'N/A' 
+  },
+  sku: { 
+    type: String, 
+    required: true, 
+    unique: true 
   }
 });
 
 const ProductSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+  distributorId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Distributor', 
+    required: true 
   },
-  icon: {//see about icons it cant have stirng data type
-    type: String,
-    default: '📦'
+  id: { 
+    type: Number, 
+    required: true 
   },
-  distributor: {
-    type: String,
-    required: true,
-    trim: true
+  name: { 
+    type: String, 
+    required: true 
   },
-  category: {
-    type: String,
-    required: true,
-    trim: true
+  icon: { 
+    type: String, 
+    default: '📦' 
+  },
+  category: { 
+    type: String, 
+    required: true 
   },
   variants: [VariantSchema]
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-// Add virtual for total stock
-ProductSchema.virtual('totalStock').get(function() {
-  return this.variants.reduce((sum, variant) => sum + variant.stock, 0);
-});
-
-// Add method to check if product has low stock
-ProductSchema.methods.hasLowStock = function() {
-  return this.variants.some(variant => variant.stock > 0 && variant.stock <= 5);
-};
-
-// Add method to check if product has out of stock
-ProductSchema.methods.hasOutOfStock = function() {
-  return this.variants.some(variant => variant.stock === 0);
-};
-
-module.exports = mongoose.model('Product', ProductSchema);
+// Add indexing for faster queries
+ProductSchema.index({ category: 1 });
+ProductSchema.index({ name: 'text', distributor: 'text' });
+const Product = mongoose.model('Product', ProductSchema);
+export default Product;

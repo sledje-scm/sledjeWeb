@@ -1,4 +1,4 @@
-// models/Distributor.js
+import mongoose from 'mongoose';
 const distributorSchema = new mongoose.Schema({
     companyName: String,
     ownerName: String,
@@ -9,8 +9,7 @@ const distributorSchema = new mongoose.Schema({
     address: String,
     location: String,   
     phone: String,
-    // products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],use differenet prodcut inventory for distributor
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }]
   }, { timestamps: true });
-  
-  module.exports = mongoose.model("Distributor", distributorSchema);
-  
+  const Distributor = mongoose.model('Distributor', DistributorSchema);
+  export default Distributor;

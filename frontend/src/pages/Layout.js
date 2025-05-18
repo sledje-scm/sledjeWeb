@@ -45,7 +45,7 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen ">
       {/* Top Navigation Bar */}
       <div className="fixed top-0 left-0 w-full bg-white shadow-md z-50 p-4">
         <div className="flex justify-between items-center">

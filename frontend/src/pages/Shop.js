@@ -121,7 +121,7 @@ const Shop = () => {
   // Use a simple parsing function instead of compromise
 
 
-const knownUnits = ['kg', 'kilogram', 'g', 'gram', 'liters', 'liter', 'bottles', 'packets', 'pieces', 'dozen', 'box', 'boxes'];
+const knownUnits = ['kg', 'kilogram', 'g', 'gram', 'liters', 'liter', 'bottles', 'packets', 'pieces', 'dozen', 'box', 'boxes', 'l', 'ml', 'milliliter', 'cups', 'pints', 'quarts', 'ounces'];
 
 function detectUnit(itemStr) {
   if (typeof itemStr !== 'string') {
@@ -161,6 +161,10 @@ function parseMultipleOrders(transcript) {
 
   let normalized;
   try {
+
+	transcript = transcript.replace(/[^a-zA-Z0-9\s.,]/g, ''); // Remove unwanted characters
+	transcript = transcript.replace(/\s+/g, ' ').trim(); // Normalize spaces
+	transcript= transcript.replace(/\bto\b/g, "two"); // Replace "to" with "two"
     normalized = wordsToNumbers(transcript); // Convert word numbers to digits
   } catch (error) {
     console.error('Error converting words to numbers:', error);

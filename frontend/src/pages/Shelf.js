@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Plus, Minus, Mic, ShoppingCart, X, ChevronRight } from "lucide-react";
+import { Search, Filter, Plus, Minus, Mic, ShoppingCart} from "lucide-react";
 import API from "../api"; 
 
 export default function Shelf() {
@@ -11,7 +11,7 @@ export default function Shelf() {
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [orderQuantities, setOrderQuantities] = useState({});
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  // const [selectedProducts, setSelectedProducts] = useState([]);
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [productData, setProductData] = useState([]);
@@ -138,12 +138,19 @@ export default function Shelf() {
     setShowHiddenColumns(!showHiddenColumns);
   };
 
-  const getPriceRange = (variants) => {
-    const prices = variants.map(v => v.price);
+  const getSellingPriceRange = (variants) => {
+    const prices = variants.map(v => v.sellingPrice);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    return min === max ? `$${min}` : `$${min} - $${max}`;
+    return min === max ? `₹${min}` : `₹${min} - ₹${max}`;
   };
+  const getCostPriceRange = (variants) => {
+    const prices = variants.map(v => v.costPrice);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max ? `₹${min}` : `₹${min} - ₹${max}`;
+  };
+  
 
   const getTotalStock = (variants) => {
     return variants.reduce((sum, variant) => sum + variant.stock, 0);
@@ -264,19 +271,14 @@ export default function Shelf() {
   };
 
   const addAllToCart = () => {
-    // Create cart items for all products with quantities > 0
     const newCartItems = [];
-    
+  
     productData.forEach(product => {
-      // Filter variants that have quantity > 0
-      const selectedVariants = product.variants.filter(variant => {
+      product.variants.forEach(variant => {
         const key = `${product.id}-${variant.id}`;
-        return orderQuantities[key]?.quantity > 0;
-      });
-      
-      if (selectedVariants.length > 0) {
-        selectedVariants.forEach(variant => {
-          const key = `${product.id}-${variant.id}`;
+        const quantity = orderQuantities[key]?.quantity || 0;
+  
+        if (quantity > 0) {
           newCartItems.push({
             id: `${product.id}-${variant.id}`,
             productId: product.id,
@@ -284,35 +286,31 @@ export default function Shelf() {
             productName: product.name,
             productIcon: product.icon,
             variantName: variant.name,
-            price: variant.price,
-            quantity: orderQuantities[key].quantity,
-            unit: orderQuantities[key].unit,
-            totalPrice: variant.price * orderQuantities[key].quantity
+            price: variant.sellingPrice,
+            quantity,
+            unit: orderQuantities[key]?.unit || "box",
+            totalPrice: variant.sellingPrice * quantity,
           });
-        });
-      }
+        }
+      });
     });
-
+  
     if (newCartItems.length === 0) {
-      alert("Please select quantity for at least one product variant");
+      alert("Please select quantity for at least one product variant.");
       return;
     }
-
-    // Add to cart
+  
     setCartItems(prev => [...prev, ...newCartItems]);
-    
-    // Reset all quantities
+    resetOrderQuantities();
+    setShowCart(true);
+  };
+  
+  const resetOrderQuantities = () => {
     const updatedQuantities = { ...orderQuantities };
     Object.keys(updatedQuantities).forEach(key => {
-      updatedQuantities[key] = {
-        ...updatedQuantities[key],
-        quantity: 0
-      };
+      updatedQuantities[key] = { ...updatedQuantities[key], quantity: 0 };
     });
     setOrderQuantities(updatedQuantities);
-
-    // Show cart
-    setShowCart(true);
   };
 
   // Add a checkout function
@@ -406,10 +404,10 @@ export default function Shelf() {
     });
 
   return (
-    <div className="min-h-screen relative font-sans">
+    <div className="min-h-screen relative font-sans bg-white overscroll-none">
       
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen overscroll-none">
           <div className="text-xl font-medium">Loading inventory data...</div>
         </div>
       ) : error ? (
@@ -464,7 +462,7 @@ export default function Shelf() {
             className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1 hover:bg-gray-50 shadow-sm transition-all"
           >
             <Filter className="h-4 w-4" />
-            {showHiddenColumns ? "Hide" : "Show"} SKU/Expiry
+            {showHiddenColumns ? "Hide" : "Show"} SKU/Expiry/Cost Price
           </button>
         </div>
       </div>
@@ -503,7 +501,7 @@ export default function Shelf() {
             <ShoppingCart className="h-5 w-5" />
             <span>Cart</span>
             {cartItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                 {cartItems.length}
               </span>
             )}
@@ -547,7 +545,7 @@ export default function Shelf() {
                     Stock
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rate
+                    Selling Price
                   </th>
                   {showHiddenColumns && (
                     <>
@@ -556,6 +554,9 @@ export default function Shelf() {
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         SKU
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cost Price
                       </th>
                     </>
                   )}
@@ -684,15 +685,28 @@ export default function Shelf() {
                       {hoveredRow === product.id ? (
                         <div className="grid grid-cols-1 gap-1">
                           {product.variants.map(variant => (
-                            <div key={variant.id} className="text-xs text-gray-900">${variant.price}</div>
+                            <div key={variant.id} className="text-xs text-gray-900">${variant.sellingPrice}</div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-900">{getPriceRange(product.variants)}</div>
+                        <div className="text-sm text-gray-900">{getSellingPriceRange(product.variants)}</div>
                       )}
                     </td>
                     {showHiddenColumns && (
                       <>
+                        <td className="px-6 py-4 min-w-20">
+                           {hoveredRow === product.id ? (
+                                <div className="grid grid-cols-1 gap-1">
+                                  {product.variants.map(variant => (
+                                    <div key={variant.id} className="text-xs text-gray-900">${variant.costPrice}</div>
+                                    ))}
+                                </div>
+                                    ) : (
+                                    <div className="text-sm text-gray-900">{getCostPriceRange(product.variants)}</div>
+                                    )
+                            }
+                                
+                        </td>
                         <td className="px-6 py-4 min-w-20">
                           {hoveredRow === product.id ? (
                             <div className="grid grid-cols-1 gap-1">
@@ -782,13 +796,12 @@ export default function Shelf() {
                 ))}
               </tbody>
             </table>
-            <button
-    onClick={handleCheckout}
-    className="mt-4 w-full bg-blue-800 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-    disabled={cartItems.length === 0}
-  >
-    Checkout (${getCartTotal()})
-  </button>
+            <div className="fixed bottom-10 right-20 z-50">
+              <button onClick={addAllToCart}
+              className="bg-blue-900 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition">
+                Add to Cart
+                </button>
+            </div>
           </div>
           </div>
           </div>

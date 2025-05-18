@@ -28,3 +28,12 @@ useEffect(() => {
 
 
 the inventory should have column for ordered items
+
+design inventory management system and ordering system for this if i already have an authentication system
+
+Remember, there should be  a product catalog from where all products of all distributors can be accessed which will be displayed only when searched
+
+there should be an inventory of items which is added from the product catalog if ordered even once
+
+
+add a list by distributor and a list by category filter
