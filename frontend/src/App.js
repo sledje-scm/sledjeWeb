@@ -15,18 +15,27 @@ import You from "./pages/You";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-// Tracking Pages
-import OrderStatus from "./pages/Tracking/OrderStatus";
-import Shipment from "./pages/Tracking/Shipment";
+// Vision Pages
+import Goals from "./pages/Vision/Goals";
+import Founders from "./pages/Vision/Founders";
+import Investors from "./pages/Vision/Investors";
+
+// Support Pages
+import ContactUs from "./pages/Support/ContactUs";
+import Grievances from "./pages/Support/Grievances";
+import Tracking from "./pages/Support/Tracking";
 
 // Services Pages
-import Logistics from "./pages/Services/Logistics";
-import Inventory from "./pages/Services/Inventory";
+import InventoryManagement from "./pages/Services/InventoryManagement";
+import BillingCreditManagement from "./pages/Services/BillingCreditManagement";
+import CustomerAutomation from "./pages/Services/CustomerAutomation";
+import SupplyChainOptimizations from "./pages/Services/SupplyChainOptimizations";
+import AIDrivenAnalytics from "./pages/Services/AIDrivenAnalytics";
 
-// Company Pages
-import About from "./pages/Company/About";
-import Careers from "./pages/Company/Careers";
-import Contact from "./pages/Company/Contact";
+// Partners Pages
+import Retailers from "./pages/Partners/Retailers";
+import Distributors from "./pages/Partners/Distributors";
+import DeliveryPartners from "./pages/Partners/DeliveryPartners";
 
 function App() {
   return (
@@ -42,78 +51,158 @@ function App() {
           }
         />
 
-        {/* Layout Pages */}
-        <Route path="/layout" element={<Layout />}>
-          <Route index element={<Navigate to="/layout/shop" />} />
+        {/* Layout Page with Default Redirect */}
+        <Route
+          path="/layout"
+          element={
+            <NavbarWrap>
+              <Layout />
+            </NavbarWrap>
+          }
+        >
+          {/* Redirect /layout to /layout/shop */}
+          <Route index element={<Navigate to="shop" replace />} />
           <Route path="shop" element={<Shop />} />
           <Route path="shelf" element={<Shelf />} />
-          <Route path="payment" element={<Payment />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="payment" element={<Payment />} />
           <Route path="you" element={<You />} />
         </Route>
 
-        {/* Authentication Pages */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-
-        {/* Tracking Pages */}
+        {/* Vision Pages */}
         <Route
-          path="/tracking/status"
+          path="/vision/goals"
           element={
             <NavbarWrap>
-              <OrderStatus />
+              <Goals />
             </NavbarWrap>
           }
         />
         <Route
-          path="/tracking/shipment"
+          path="/vision/founders"
           element={
             <NavbarWrap>
-              <Shipment />
+              <Founders />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/vision/investors"
+          element={
+            <NavbarWrap>
+              <Investors />
+            </NavbarWrap>
+          }
+        />
+
+        {/* Support Pages */}
+        <Route
+          path="/support/contact-us"
+          element={
+            <NavbarWrap>
+              <ContactUs />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/support/grievances"
+          element={
+            <NavbarWrap>
+              <Grievances />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/support/tracking"
+          element={
+            <NavbarWrap>
+              <Tracking />
             </NavbarWrap>
           }
         />
 
         {/* Services Pages */}
         <Route
-          path="/services/logistics"
+          path="/services/inventory-management"
           element={
             <NavbarWrap>
-              <Logistics />
+              <InventoryManagement />
             </NavbarWrap>
           }
         />
         <Route
-          path="/services/inventory"
+          path="/services/billing-credit-management"
           element={
             <NavbarWrap>
-              <Inventory />
+              <BillingCreditManagement />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/services/customer-automation"
+          element={
+            <NavbarWrap>
+              <CustomerAutomation />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/services/supply-chain-optimizations"
+          element={
+            <NavbarWrap>
+              <SupplyChainOptimizations />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/services/ai-driven-analytics"
+          element={
+            <NavbarWrap>
+              <AIDrivenAnalytics />
             </NavbarWrap>
           }
         />
 
-        {/* Company Pages */}
+        {/* Partners Pages */}
         <Route
-          path="/company/about"
+          path="/partners/retailers"
           element={
             <NavbarWrap>
-              <About />
+              <Retailers />
             </NavbarWrap>
           }
         />
         <Route
-          path="/company/careers"
+          path="/partners/distributors"
           element={
             <NavbarWrap>
-              <Careers />
+              <Distributors />
             </NavbarWrap>
           }
         />
         <Route
-          path="/company/contact"
+          path="/partners/delivery-partners"
           element={
             <NavbarWrap>
-              <Contact />
+              <DeliveryPartners />
+            </NavbarWrap>
+          }
+        />
+
+        {/* Authentication Pages */}
+        <Route
+          path="/login"
+          element={
+            <NavbarWrap>
+              <Login />
+            </NavbarWrap>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <NavbarWrap>
+              <Signup />
             </NavbarWrap>
           }
         />
