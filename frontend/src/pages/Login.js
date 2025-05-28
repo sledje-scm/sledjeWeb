@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Lock, User, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api";
 
-export default function LoginPage() {
+export default function Login() {
   const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState(""); 
   const [otp, setOtp] = useState(""); 
@@ -12,7 +11,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   // Flag to control whether we are in test mode or real login mode
-  const isTestMode =true; // Set to `true` for testing, `false` for real login
+  const isTestMode = false; // Set to `true` for testing, `false` for real login
 
   const handleLogin = async () => {
     try {
