@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 // Components
-import NavbarWrap from "./components/navbarWrapper";
+import NavbarWrap from "./components/Structure";
 
 // Pages
 import Home from "./pages/Home";
@@ -36,6 +36,9 @@ import AIDrivenAnalytics from "./pages/Services/AIDrivenAnalytics";
 import Retailers from "./pages/Partners/Retailers";
 import Distributors from "./pages/Partners/Distributors";
 import DeliveryPartners from "./pages/Partners/DeliveryPartners";
+
+// Not Found Page
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -203,6 +206,16 @@ function App() {
           element={
             <NavbarWrap>
               <Signup />
+            </NavbarWrap>
+          }
+        />
+
+        {/* Fallback route for 404 */}
+        <Route
+          path="*"
+          element={
+            <NavbarWrap>
+              <NotFound />
             </NavbarWrap>
           }
         />
