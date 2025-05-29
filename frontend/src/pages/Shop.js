@@ -336,11 +336,8 @@ function parseMultipleOrders(transcript) {
     return 0;
   });
 
-  const renderOrderCard = (order, isPayment = false) => (
-    <div
-      key={order.orderId}
-      className="bg-white rounded-lg shadow-md p-4" // Fixed width for 3 cards in a row
-    >
+ const renderOrderCard = (order, isPayment = false) => (
+    <div key={order.orderId} className="min-w-[260px] max-w-xs bg-white rounded-lg shadow-md p-4 mx-2">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-md font-bold">{order.customerName || "Custom"}</h2>
         <Trash
@@ -349,26 +346,56 @@ function parseMultipleOrders(transcript) {
         />
       </div>
       <div>
-        {(expandedCards[order.orderId]
-          ? order.items
-          : order.items.slice(0, 3)
-        ).map((item) => (
-          <div
-            key={item.id}
-            className="flex justify-between items-center text-sm border-b py-1 last:border-0"
-          >
-            <div>
-              <p>
-                {item.item} ({item.brand})
-              </p>
-            </div>
+      {(expandedCards[order.orderId] ? order.items : order.items.slice(0, 3)).map((item) => (
+  <div key={item.id} className="flex justify-between items-center text-sm border-b py-1">
+    <div>
+      <p>{item.item} ({item.brand})</p>
+      {!isPayment && (
+        <div className="flex items-center">
+          <input
+            type="number"
+            min="1"
+            value={item.quantity}
+            onChange={(e) => {
+              const quantity = parseInt(e.target.value);
+              setUpcomingOrders((prev) =>
+                prev.map((o) =>
+                  o.orderId === order.orderId
+                    ? {
+                        ...o,
+                        items: o.items.map((i) =>
+                          i.id === item.id ? { ...i, quantity} : i
+                        ),
+                      }
+                    : o
+                )
+              );
+            }}
+            className="w-12 border rounded px-1 text-xs"
+          />
+          {item.unit && <span className="ml-1 text-xs text-gray-600">{item.unit}</span>}
+        </div>
+      )}
+    </div>
+            {!isPayment && (
+              <Trash
+                className="w-3 h-3 text-red-400 cursor-pointer"
+                onClick={() => deleteItem(order.orderId, item.id)}
+              />
+            )}
           </div>
         ))}
-        <p className="mt-2 text-sm font-semibold">
-          Total: ₹{calculateTotal(order.items)}
-        </p>
+        {order.items.length > 3 && (
+          <button
+            className="text-xs text-blue-500 mt-1"
+            onClick={() => toggleExpand(order.orderId)}
+          >
+            {expandedCards[order.orderId] ? "View Less" : "View More"}
+          </button>
+        )}
+        <p className="mt-2 text-sm font-semibold">Total: ₹{calculateTotal(order.items)}</p>
         <p className="text-xs text-gray-500">Order ID: {order.orderId}</p>
-{!isPayment ? (
+        {!isPayment ? (
           <Check
             className="w-5 h-5 text-green-600 cursor-pointer mt-2"
             onClick={() => moveToPayment(order.orderId)}
@@ -389,7 +416,6 @@ function parseMultipleOrders(transcript) {
       </div>
     </div>
   );
-
   const handleOrderInput = (field, value) => {
     setNewOrder((prev) => ({ ...prev, [field]: value }));
   };
@@ -417,26 +443,26 @@ function parseMultipleOrders(transcript) {
     setTranscript('');
   };
 
-  const getDynamicBackgroundColor = (orderCount) => {
-    if (orderCount === 0) return "bg-gray-200"; // No orders
-    if (orderCount <= 3) return "bg-blue-200"; // Few orders
-    if (orderCount <= 6) return "bg-blue-400"; // Moderate orders
-    return "bg-blue-600"; // Many orders
-  };
+  // const getDynamicBackgroundColor = (orderCount) => {
+  //   if (orderCount === 0) return "bg-gray-200"; // No orders
+  //   if (orderCount <= 3) return "bg-blue-200"; // Few orders
+  //   if (orderCount <= 6) return "bg-blue-400"; // Moderate orders
+  //   return "bg-blue-600"; // Many orders
+  // };
 
-  const getDynamicHeight = (orderCount) => {
-    if (orderCount === 0) return "h-32"; // Small height for no orders
-    if (orderCount <= 3) return "h-48"; // Medium height for a few orders
-    if (orderCount <= 6) return "h-64"; // Larger height for moderate orders
-    return "h-64"; // Auto height for many orders
-  };
+  // const getDynamicHeight = (orderCount) => {
+  //   if (orderCount === 0) return "h-32"; // Small height for no orders
+  //   if (orderCount <= 3) return "h-48"; // Medium height for a few orders
+  //   if (orderCount <= 6) return "h-64"; // Larger height for moderate orders
+  //   return "h-64"; // Auto height for many orders
+  // };
 
-  const getDynamicWidth = (orderCount) => {
-    if (orderCount === 0) return "w-1/3"; // Small width for no orders
-    if (orderCount <= 3) return "w-1/2"; // Medium width for a few orders
-    if (orderCount <= 6) return "w-2/3"; // Larger width for moderate orders
-    return "w-2/3"; // Full width for many orders
-  };
+  // const getDynamicWidth = (orderCount) => {
+  //   if (orderCount === 0) return "w-1/3"; // Small width for no orders
+  //   if (orderCount <= 3) return "w-1/2"; // Medium width for a few orders
+  //   if (orderCount <= 6) return "w-2/3"; // Larger width for moderate orders
+  //   return "w-2/3"; // Full width for many orders
+  // };
 
   const handleCloseModal = () => {
     setShowOrderModal(false); // Close the modal
@@ -586,17 +612,18 @@ function parseMultipleOrders(transcript) {
       {/* Flex container for Upcoming Orders and Payment Section */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Upcoming Orders Section */}
-        <section
-          className="bg-blue-800 p-4 rounded-lg shadow-md flex-1"
+        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+          className="p-5 rounded-lg shadow-md flex-1"
         >
           <h2 className="text-xl font-semibold text-white mb-2">Upcoming Orders</h2>
           <div
             className="overflow-y-auto"
             style={{
-              maxHeight: "400px", // Set a fixed height for the section
+              maxHeight: "600px", // Set a fixed height for the section
             }}
           >
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-4"
+            style={{gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",justifyItems: "stretch" }}>
               {upcomingOrders.length === 0 ? (
                 <p className="text-gray-300">No upcoming orders.</p>
               ) : (
@@ -607,19 +634,22 @@ function parseMultipleOrders(transcript) {
         </section>
 
         {/* Payment Section */}
-        <section
-          className="bg-blue-800 p-4 rounded-lg shadow-md flex-1"
+        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+          className=" p-4 rounded-lg shadow-md flex-1 "
         >
           <h2 className="text-xl font-semibold text-white mb-2">Payment Section</h2>
           <div
             className="overflow-y-auto"
             style={{
-              maxHeight: "400px", // Set a fixed height for the section
+              maxHeight: "600px",
+              // Set a fixed height for the section
+              // Adjust this value as needed
             }}
           >
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-4 "
+            style={{gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",justifyItems: "stretch" }}>
               {paymentOrders.length === 0 ? (
-                <p className="text-gray-300">No orders in payment section.</p>
+                <p className="text-gray-300">No orders in payment section.</p> 
               ) : (
                 paymentOrders.map((order) => renderOrderCard(order, true))
               )}
@@ -629,7 +659,8 @@ function parseMultipleOrders(transcript) {
       </div>
 
       {/* Transaction History Section */}
-      <section className="bg-blue-800 p-4 rounded-lg shadow-md mt-6">
+      <section className="p-4 rounded-lg shadow-md mt-6" style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}>
+        
         <h2 className="text-xl font-semibold text-white mb-2">Transaction History</h2>
         <div
           className="overflow-y-auto"

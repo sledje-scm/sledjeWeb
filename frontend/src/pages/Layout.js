@@ -36,6 +36,7 @@ export default function Layout() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  
 
   const handleLogout = () => {
     // Clear user session or token (if stored in localStorage or cookies)
@@ -84,6 +85,19 @@ export default function Layout() {
           </div>
         </div>
       </div>
+
+       
+        {/* Bottom border line with gap for active item */}
+        <div className="relative h-0.5 bg-blue-600">
+          {/* Gap for active menu item */}
+          <div 
+            className="absolute top-0 h-0.5 bg-white transition-all duration-300 ease-in-out"
+            style={{
+              left: `${activeItemPosition.left}px`,
+              width: `${activeItemPosition.width}px`
+            }}
+          />
+        </div>
 
       {/* Content Area */}
       <div className="pt-20">
