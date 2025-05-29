@@ -23,7 +23,7 @@ app.use('/api/retailers', retailerRoutes);
 app.use(bodyParser.json());
 
 // In-memory database (replace with real database in production)
-let products = [
+let dproducts = [
   {
     id: 1,
     name: "Smartphone X",

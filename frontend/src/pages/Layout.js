@@ -36,7 +36,30 @@ export default function Layout() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const [activeItemPosition, setActiveItemPosition] = useState({ left: 0, width: 0 });
+  const [showMobileLogout, setShowMobileLogout] = useState(false);
+
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const activeIndex = navItems.findIndex(item => location.pathname === item.to);
+      if (activeIndex !== -1) {
+        const navElement = document.querySelector(`[data-nav-index="${activeIndex}"]`);
+        const navbarElement = document.querySelector('.fixed.top-0');
+        
+        if (navElement && navbarElement) {
+          const rect = navElement.getBoundingClientRect();
+          const navbarRect = navbarElement.getBoundingClientRect();
+          setActiveItemPosition({
+            left: rect.left - navbarRect.left,
+            width: rect.width
+          });
+        }
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     // Clear user session or token (if stored in localStorage or cookies)
@@ -46,61 +69,96 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {/* Top Navigation Bar */}
-      <div className="fixed top-0 left-0 w-full bg-white shadow-md z-50 p-4">
-        <div className="flex justify-between items-center">
-          {/* Left Section: Logo and Navigation Items */}
-          <div className="flex items-center space-x-6">
-            {/* Logo */}
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-12 w-auto cursor-pointer"
-              onClick={() => navigate("/")}
-            />
+      <div className="fixed top-0 left-0 w-full bg-white shadow-md z-50 relative">
+        <div className="p-2 md:p-4">
+          <div className="flex justify-between items-center nav-container">
+            {/* Left Section: Logo and Navigation Items */}
+            <div className="flex items-center space-x-2 md:space-x-6 w-full md:w-auto">
+              {/* Logo - Hidden on mobile */}
+              <img
+                src={logo}
+                alt="Logo"
+                className="hidden md:block h-12 w-auto cursor-pointer"
+                onClick={() => navigate("/")}
+              />
 
-            {/* Navigation Items */}
-            {navItems.map(({ name, to }, index) => (
+              {/* Navigation Items */}
+              <div className="flex items-center justify-between md:justify-start space-x-1 md:space-x-6 w-full md:w-auto overflow-x-auto">
+                {navItems.map(({ name, to, icon: Icon }, index) => (
+                  <button
+                    key={index}
+                    data-nav-index={index}
+                    onClick={() => {
+                      navigate(to);
+                      setShowMobileLogout(false);
+                    }}
+                    className={`flex flex-col md:flex-row items-center justify-center min-w-0 flex-shrink-0 text-blue-1000 text-xs md:text-lg font-bold transition px-2 md:px-4 py-2 rounded-md ${
+                      location.pathname === to ? "bg-blue-800 text-white" : "hover:text-blue-700 "
+                    }`}
+                  >
+                    {/* Show icon on mobile, hide on desktop */}
+                    <div className="block md:hidden mb-1">
+                      {typeof Icon === 'function' ? <Icon /> : <Icon className="w-4 h-4" />}
+                    </div>
+                    <span className="text-center">{name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Section: Logout Button - Hidden on mobile, but add mobile logout trigger */}
+            <div className="hidden md:block">
               <button
-                key={index}
-                onClick={() => navigate(to)}
-                className={`text-blue-1000 hover:text-blue-700 text-lg font-bold transition ${
-                  location.pathname === to ? "bg-blue-800 text-white px-4 py-2 rounded-md" : ""
-                }`}
+                onClick={handleLogout}
+                className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 transition"
               >
-                {name}
+                Logout
               </button>
-            ))}
+            </div>
+            
+            {/* Mobile Logout Toggle Button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setShowMobileLogout(!showMobileLogout)}
+                className="text-blue-1000 p-2"
+              >
+                <div className="w-1 h-1 bg-blue-1000 rounded-full mb-1"></div>
+                <div className="w-1 h-1 bg-blue-1000 rounded-full mb-1"></div>
+                <div className="w-1 h-1 bg-blue-1000 rounded-full"></div>
+              </button>
+            </div>
           </div>
-
-          {/* Right Section: Logout Button */}
-          <div>
+        </div>
+        
+        {/* Mobile Logout Dropdown */}
+        {showMobileLogout && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg border-t z-40">
             <button
               onClick={handleLogout}
-              className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 transition"
+              className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-medium"
             >
               Logout
             </button>
           </div>
-        </div>
-      </div>
-
-       
+        )}
+        
         {/* Bottom border line with gap for active item */}
-        <div className="relative h-0.5 bg-blue-600">
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600">
           {/* Gap for active menu item */}
           <div 
             className="absolute top-0 h-0.5 bg-white transition-all duration-300 ease-in-out"
             style={{
-              left: `${activeItemPosition.left}px`,
-              width: `${activeItemPosition.width}px`
+              left: `${activeItemPosition.left - 10}px`,
+              width: `${activeItemPosition.width + 10}px`
             }}
           />
         </div>
+      </div>
 
       {/* Content Area */}
-      <div className="pt-20">
+      <div>
         <Outlet />
       </div>
     </div>

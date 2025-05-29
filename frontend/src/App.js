@@ -58,10 +58,9 @@ function App() {
         <Route
           path="/layout"
           element={
-            <NavbarWrap>
               <Layout />
-            </NavbarWrap>
           }
+          
         >
           {/* Redirect /layout to /layout/shop */}
           <Route index element={<Navigate to="shop" replace />} />
