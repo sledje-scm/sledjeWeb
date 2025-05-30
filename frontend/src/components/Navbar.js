@@ -1,188 +1,429 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { PlaneLanding, Library, BanknoteArrowUp, Landmark, User, ScanBarcode, MoreVertical, LogOut } from "lucide-react";
-import logo from "../assets/navBarLogo1.png"; // Import your logo
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/navBarLogo1.png";
+import { Layers, Menu, X } from "lucide-react";
 
-function TogglingPaymentIcon() {
-  const [showFirst, setShowFirst] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowFirst((prev) => !prev);
-    }, 3000); // Change every 3 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="transition-opacity duration-500 ease-in-out">
-      {showFirst ? (
-        <BanknoteArrowUp className="w-5 h-5 mb-1" />
-      ) : (
-        <Landmark className="w-5 h-5 mb-1" />
-      )}
-    </div>
-  );
-}
-
-export default function Layout() {
-  const navItems = [
-    { name: "Shop", to: "/layout/shop", icon: ScanBarcode },
-    { name: "Shelf", to: "/layout/shelf", icon: Library },
-    { name: "Payments", to: "/layout/payment", icon: TogglingPaymentIcon },
-    { name: "Orders", to: "/layout/orders", icon: PlaneLanding },
-    { name: "You", to: "/layout/you", icon: User },
-  ];
-
+export default function Navbar({ onLoginClick }) {
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const [activeItemPosition, setActiveItemPosition] = useState({ left: 0, width: 0 });
-  const [showMobileDropdown, setShowMobileDropdown] = useState(false);
 
-  useEffect(() => {
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      const activeIndex = navItems.findIndex(item => location.pathname === item.to);
-      if (activeIndex !== -1) {
-        const navElement = document.querySelector(`[data-nav-index="${activeIndex}"]`);
-        const navbarElement = document.querySelector('.fixed.top-0');
-        
-        if (navElement && navbarElement) {
-          const rect = navElement.getBoundingClientRect();
-          const navbarRect = navbarElement.getBoundingClientRect();
-          setActiveItemPosition({
-            left: rect.left - navbarRect.left,
-            width: rect.width
-          });
-        }
-      }
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showMobileDropdown && !event.target.closest('.mobile-dropdown-container')) {
-        setShowMobileDropdown(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showMobileDropdown]);
-
-  const handleLogout = () => {
-    // Clear user session or token (if stored in localStorage or cookies)
-    localStorage.removeItem("userInfo");
-    // Close dropdown
-    setShowMobileDropdown(false);
-    // Redirect to the home page
-    navigate("/");
+  const toggleDropdown = (name) => {
+    setOpenDropdown((prev) => (prev === name ? null : name));
   };
 
+  const closeDropdown = () => {
+    setOpenDropdown(null);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    setOpenDropdown(null); // Close any open dropdowns when toggling mobile menu
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setShowNavbar(currentY < lastScrollY || currentY < 10);
+      setLastScrollY(currentY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <div className="min-h-screen">
-      {/* Top Navigation Bar */}
-      <div className="fixed top-0 left-0 w-full bg-white shadow-md z-50 relative">
-        <div className="p-2 md:p-4">
-          <div className="flex justify-between items-center nav-container">
-            {/* Left Section: Logo and Navigation Items */}
-            <div className="flex items-center space-x-2 md:space-x-6 w-full md:w-auto">
-              {/* Logo - Hidden on mobile */}
-              <img
-                src={logo}
-                alt="Logo"
-                className="hidden md:block h-12 w-auto cursor-pointer"
-                onClick={() => navigate("/")}
-              />
+    <nav
+      className={`fixed top-0 left-0 w-full bg-white z-50 p-4 transition-transform duration-300 ${
+        showNavbar ? "translate-y-0" : "-translate-y-full"
+      }`}
+      style={{
+        boxShadow: "0 8px 20px rgba(0, 0, 255, 0.15)",
+      }}
+    >
+      <div className="flex justify-between items-center">
+        {/* Logo - Fixed size */}
+        <div className="flex-shrink-0">
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="Logo" className="h-12 w-auto" />
+          </Link>
+        </div>
 
-              {/* Navigation Items */}
-              <div className="flex items-center justify-between md:justify-start space-x-1 md:space-x-6 w-full md:w-auto overflow-x-auto">
-                {navItems.map(({ name, to, icon: Icon }, index) => (
-                  <button
-                    key={index}
-                    data-nav-index={index}
-                    onClick={() => {
-                      navigate(to);
-                      setShowMobileDropdown(false);
-                    }}
-                    className={`flex flex-col md:flex-row items-center justify-center min-w-0 flex-shrink-0 text-blue-1000 text-xs md:text-lg font-bold transition px-2 md:px-4 py-2 rounded-md ${
-                      location.pathname === to ? "bg-blue-800 text-white" : "hover:text-blue-700 "
-                    }`}
-                  >
-                    {/* Show icon on mobile, hide on desktop */}
-                    <div className="block md:hidden mb-1">
-                      {typeof Icon === 'function' ? <Icon /> : <Icon className="w-4 h-4" />}
-                    </div>
-                    <span className="text-center">{name}</span>
-                  </button>
-                ))}
+        {/* Desktop Menu and Login - Right side */}
+        <div className="hidden lg:flex items-center space-x-6">
+          {/* Vision Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("vision")}
+              className={`text-blue-1000 text-lg font-bold transition ${
+                openDropdown === "vision" ? "bg-blue-800 text-white px-2 py-1 rounded-md" : "hover:text-blue-700"
+              }`}
+            >
+              Vision
+            </button>
+            {openDropdown === "vision" && (
+              <div className="absolute left-0 mt-2 flex flex-col bg-blue-800 shadow-md rounded-md py-2 z-50 min-w-48">
+                <Link
+                  to="/vision/goals"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Our Goals
+                </Link>
+                <Link
+                  to="/vision/founders"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Founders
+                </Link>
+                <Link
+                  to="/vision/investors"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Investors
+                </Link>
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Right Section: Logout Button - Hidden on mobile, but add mobile dropdown trigger */}
-            <div className="hidden md:block">
+          {/* Support Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("support")}
+              className={`text-blue-1000 text-lg font-bold transition ${
+                openDropdown === "support" ? "bg-blue-800 text-white px-2 py-1 rounded-md" : "hover:text-blue-700"
+              }`}
+            >
+              Support
+            </button>
+            {openDropdown === "support" && (
+              <div className="absolute left-0 mt-2 flex flex-col bg-blue-800 shadow-md rounded-md py-2 z-50 min-w-48">
+                <Link
+                  to="/support/tracking"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Tracking
+                </Link>
+                <Link
+                  to="/support/grievances"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Grievances
+                </Link>
+                <Link
+                  to="/support/contact-us"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Contact Us
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Services Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("services")}
+              className={`text-blue-1000 text-lg font-bold transition ${
+                openDropdown === "services" ? "bg-blue-800 text-white px-2 py-1 rounded-md" : "hover:text-blue-700"
+              }`}
+            >
+              Services
+            </button>
+            {openDropdown === "services" && (
+              <div className="absolute left-0 mt-2 flex flex-col bg-blue-800 shadow-md rounded-md py-2 z-50 min-w-64">
+                <Link
+                  to="/services/inventory-management"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Inventory Management
+                </Link>
+                <Link
+                  to="/services/billing-credit-management"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Billing and Credit Management
+                </Link>
+                <Link
+                  to="/services/customer-automation"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Customer Automation
+                </Link>
+                <Link
+                  to="/services/supply-chain-optimizations"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Supply Chain Optimizations
+                </Link>
+                <Link
+                  to="/services/ai-driven-analytics"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  AI Driven Analytics
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Partners Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("partners")}
+              className={`text-blue-1000 text-lg font-bold transition ${
+                openDropdown === "partners" ? "bg-blue-800 text-white px-2 py-1 rounded-md" : "hover:text-blue-700"
+              }`}
+            >
+              Partners
+            </button>
+            {openDropdown === "partners" && (
+              <div className="absolute left-0 mt-2 flex flex-col bg-blue-800 shadow-md rounded-md py-2 z-50 min-w-48">
+                <Link
+                  to="/partners/retailers"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Retailers
+                </Link>
+                <Link
+                  to="/partners/distributors"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Distributors
+                </Link>
+                <Link
+                  to="/partners/delivery-partners"
+                  className="px-4 py-2 text-white hover:bg-blue-700 rounded-md whitespace-nowrap"
+                  onClick={closeDropdown}
+                >
+                  Delivery Partners
+                </Link>
+              </div>
+            )}
+          </div>
+          
+          {/* Login and Menu buttons */}
+          <button
+            onClick={onLoginClick}
+            className="bg-blue-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-900 transition"
+          >
+            Login
+          </button>
+          <button className="bg-gray-200 text-gray-900 px-5 py-3 rounded-md shadow-md hover:bg-gray-300">
+            <Layers className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="lg:hidden flex items-center space-x-2 flex-shrink-0">
+          <button
+            onClick={onLoginClick}
+            className="bg-blue-700 text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-blue-900 transition"
+          >
+            Login
+          </button>
+          <button
+            onClick={toggleMobileMenu}
+            className="bg-gray-200 text-gray-900 p-2 rounded-md shadow-md hover:bg-gray-300"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden mt-4 bg-white border-t border-gray-200">
+          <div className="py-2 space-y-1">
+            {/* Vision Mobile */}
+            <div>
               <button
-                onClick={handleLogout}
-                className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700 transition"
-              >
-                Logout
-              </button>
-            </div>
-            
-            {/* Mobile Dropdown Toggle Button */}
-            <div className="md:hidden mobile-dropdown-container relative">
-              <button
-                onClick={() => setShowMobileDropdown(!showMobileDropdown)}
-                className={`p-2 rounded-md transition-colors duration-200 ${
-                  showMobileDropdown 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-blue-1000 hover:bg-gray-100'
+                onClick={() => toggleDropdown("vision")}
+                className={`w-full text-left px-4 py-3 text-blue-1000 font-semibold transition ${
+                  openDropdown === "vision" ? "bg-blue-800 text-white" : "hover:bg-gray-100"
                 }`}
-                aria-label="Menu"
               >
-                <MoreVertical className="w-5 h-5" />
+                Vision
               </button>
-
-              {/* Mobile Dropdown Menu */}
-              {showMobileDropdown && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                  {/* Dropdown arrow */}
-                  <div className="absolute -top-2 right-3 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
-                  <div className="absolute -top-3 right-3 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-200"></div>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 font-medium transition-colors duration-150 flex items-center space-x-2"
+              {openDropdown === "vision" && (
+                <div className="bg-blue-50 pl-8">
+                  <Link
+                    to="/vision/goals"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
+                    Our Goals
+                  </Link>
+                  <Link
+                    to="/vision/founders"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Founders
+                  </Link>
+                  <Link
+                    to="/vision/investors"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Investors
+                  </Link>
                 </div>
               )}
             </div>
+
+            {/* Support Mobile */}
+            <div>
+              <button
+                onClick={() => toggleDropdown("support")}
+                className={`w-full text-left px-4 py-3 text-blue-1000 font-semibold transition ${
+                  openDropdown === "support" ? "bg-blue-800 text-white" : "hover:bg-gray-100"
+                }`}
+              >
+                Support
+              </button>
+              {openDropdown === "support" && (
+                <div className="bg-blue-50 pl-8">
+                  <Link
+                    to="/support/tracking"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Tracking
+                  </Link>
+                  <Link
+                    to="/support/grievances"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Grievances
+                  </Link>
+                  <Link
+                    to="/support/contact-us"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Contact Us
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Services Mobile */}
+            <div>
+              <button
+                onClick={() => toggleDropdown("services")}
+                className={`w-full text-left px-4 py-3 text-blue-1000 font-semibold transition ${
+                  openDropdown === "services" ? "bg-blue-800 text-white" : "hover:bg-gray-100"
+                }`}
+              >
+                Services
+              </button>
+              {openDropdown === "services" && (
+                <div className="bg-blue-50 pl-8">
+                  <Link
+                    to="/services/inventory-management"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Inventory Management
+                  </Link>
+                  <Link
+                    to="/services/billing-credit-management"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Billing and Credit Management
+                  </Link>
+                  <Link
+                    to="/services/customer-automation" 
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Customer Automation
+                  </Link>
+                  <Link
+                    to="/services/supply-chain-optimizations"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Supply Chain Optimizations
+                  </Link>
+                  <Link
+                    to="/services/ai-driven-analytics"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    AI Driven Analytics
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Partners Mobile */}
+            <div>
+              <button
+                onClick={() => toggleDropdown("partners")}
+                className={`w-full text-left px-4 py-3 text-blue-1000 font-semibold transition ${
+                  openDropdown === "partners" ? "bg-blue-800 text-white" : "hover:bg-gray-100"
+                }`}
+              >
+                Partners
+              </button>
+              {openDropdown === "partners" && (
+                <div className="bg-blue-50 pl-8">
+                  <Link
+                    to="/partners/retailers"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Retailers
+                  </Link>
+                  <Link
+                    to="/partners/distributors"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Distributors
+                  </Link>
+                  <Link
+                    to="/partners/delivery-partners"
+                    className="block px-4 py-2 text-blue-800 hover:bg-blue-100"
+                    onClick={closeMobileMenu}
+                  >
+                    Delivery Partners
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="px-4 py-2">
+              <button className="w-full bg-gray-200 text-gray-900 py-3 rounded-md shadow-md hover:bg-gray-300 flex justify-center">
+                <Layers className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
-        
-        {/* Bottom border line with gap for active item */}
-        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600">
-          {/* Gap for active menu item */}
-          <div 
-            className="absolute top-0 h-0.5 bg-white transition-all duration-300 ease-in-out"
-            style={{
-              left: `${activeItemPosition.left - 10}px`,
-              width: `${activeItemPosition.width + 10}px`
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div>
-        <Outlet />
-      </div>
-    </div>
+      )}
+    </nav>
   );
 }

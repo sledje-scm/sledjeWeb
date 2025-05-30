@@ -33,6 +33,20 @@ export default function Layout() {
     { name: "Orders", to: "/layout/orders", icon: PlaneLanding },
     { name: "You", to: "/layout/you", icon: User },
   ];
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  
+useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setShowNavbar(currentY < lastScrollY || currentY < 10);
+      setLastScrollY(currentY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY]);
 
   const navigate = useNavigate();
   const location = useLocation();

@@ -274,7 +274,7 @@ const handleSelectAllChange = () => {
                         onClick={() => deleteDistributor(distributor)}
                         className="text-red-600 hover:text-red-800"
                       >
-                        <Trash2 size={20} />
+                        <Trash2 size={20} color="black" />
                       </button>
                     </div>
 
@@ -300,7 +300,7 @@ const handleSelectAllChange = () => {
                             }
                             className="text-red-500 hover:text-red-700 mt-1"
                           >
-                            <Trash size={16} />
+                            <Trash size={16} color="gray"/>
                           </button>
                         </li>
                       ))}
@@ -323,7 +323,7 @@ const handleSelectAllChange = () => {
                       </p>
                       <button
                         onClick={() => placeDistributorOrder(distributor)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700"
+                        className="bg-blue-700 text-white px-4 py-2 hover:bg-blue-900"
                       >
                         Order
                       </button>
@@ -336,7 +336,7 @@ const handleSelectAllChange = () => {
             <div className="flex justify-end">
               <button
                 onClick={placeAllOrders}
-                className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
               >
                 Place All Orders
               </button>
