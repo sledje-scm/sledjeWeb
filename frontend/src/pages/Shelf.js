@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Search,
@@ -443,7 +444,7 @@ export default function Shelf() {
     return cartItems.reduce((total, item) => total + item.totalPrice, 0).toLocaleString();
   };
 
-  // First, add this helper function inside your component
+// First, add this helper function inside your component
 const hasAnyQuantities = () => {
   return Object.values(orderQuantities).some(item => item.quantity > 0);
 };
@@ -492,10 +493,8 @@ const addAllToCart = () => {
   setOrderQuantities(resetQuantities);
 };
 
-// Add this JSX right before the closing </div> of the main container￼
-
+// Add this JSX right before the closing </div> of the main container
 // (before the Cart Sidebar)
-
   const handleCheckout = async () => {
     try {
       setIsLoading(true);
@@ -695,7 +694,7 @@ const addAllToCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-300 shadow-lg border-b">
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 shadow-lg border-b">
         <div className="px-3 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Left: Inventory Title, Address, Product Count */}
           <div className="flex-1">
@@ -707,6 +706,7 @@ const addAllToCart = () => {
                 {currentProducts.length} products
               </span>
             </div>
+            
             <div className="mt-1 text-white text-sm sm:text-base opacity-90">
               123, Main Bazaar Road, Connaught Place, New Delhi, 110001
             </div>
@@ -912,7 +912,7 @@ const addAllToCart = () => {
                   onClick={() => handleSubcategoryClick(subcat)}
                   className={`text-left px-3 py-2 rounded-lg font-medium transition-colors ${
                     activeSubcategory === subcat
-                      ? "bg-blue-600 text-white shadow"
+                      ? "bg-blue-900 text-white shadow"
                       : "bg-gray-100 text-gray-700 hover:bg-sky-100"
                   }`}
                   style={{

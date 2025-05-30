@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Trash, Check, FileText, ArrowDown, ArrowUp, PlusCircle } from "lucide-react";
-import CreateOrder from "./CreateOrder";
+import CreateOrder from "../components/CreateOrder";
 
 const dummyOrders = [
   {
@@ -297,14 +297,13 @@ const Shop = () => {
       {/* Flex container for Upcoming Orders and Payment Section */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Upcoming Orders Section */}
-        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+        <section style={{background: "linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}
           className="p-5 rounded-lg shadow-md flex-1"
         >
           <h2 className="text-xl font-semibold text-white mb-2">Upcoming Orders</h2>
           <div
             className="overflow-y-auto"
-            style={{
-              maxHeight: "600px",
+            style={{ 
             }}
           >
             <div className="grid gap-4"
@@ -319,7 +318,7 @@ const Shop = () => {
         </section>
 
         {/* Payment Section */}
-        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+        <section style={{background: "linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}
           className=" p-4 rounded-lg shadow-md flex-1 "
         >
           <h2 className="text-xl font-semibold text-white mb-2">Payment Section</h2>
@@ -342,7 +341,7 @@ const Shop = () => {
       </div>
 
       {/* Transaction History Section */}
-      <section className="p-4 rounded-lg shadow-md mt-6" style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}>
+      <section className="p-4 rounded-lg shadow-md mt-6" style={{background: "linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}>
         <h2 className="text-xl font-semibold text-white mb-2">Transaction History</h2>
         <div
           className="overflow-y-auto"

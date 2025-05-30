@@ -247,7 +247,7 @@ const Payment = () => {
     <div className="min-h-screen bg-blue-50">
       {/* Header */}
       <div className="bg-blue-900 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold mb-2">Payment Settlement Hub</h1>
