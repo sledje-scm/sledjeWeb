@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // backend URL
+  baseURL: "https://sledjeweb-2.onrender.com/api", // backend URL
 });
 
 // If you want to attach token for logged-in routes later:
