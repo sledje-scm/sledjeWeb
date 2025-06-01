@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-d
 
 // Components
 import NavbarWrap from "./components/Structure";
-
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./components/AuthContext";
 // Pages
 import Home from "./pages/Home";
 import Layout from "./pages/Layout";
@@ -43,6 +44,7 @@ import NotFound from "./pages/NotFound";
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         {/* Home Page */}
@@ -59,7 +61,10 @@ function App() {
         <Route
           path="/layout"
           element={
-              <Layout />
+            <PrivateRoute>
+               <Layout />
+            </PrivateRoute>
+             
           }
           
         >
@@ -221,6 +226,7 @@ function App() {
         />
       </Routes>
     </Router>
+  </AuthProvider>
   );
 }
 

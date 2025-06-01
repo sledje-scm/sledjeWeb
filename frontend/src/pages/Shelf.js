@@ -98,7 +98,7 @@ export default function Shelf() {
       subcategory: "Laptops",
       distributor: "Apple Inc.",
       icon: "💻",
-      rating: 4.8,
+      dailyAvgSales: 7,
       variants: [
         {
           id: 101,
@@ -127,7 +127,7 @@ export default function Shelf() {
       subcategory: "Smartphones",
       distributor: "Apple Inc.",
       icon: "📱",
-      rating: 4.9,
+      dailyAvgSales: 12,
       variants: [
         {
           id: 201,
@@ -156,7 +156,7 @@ export default function Shelf() {
       subcategory: "Laptops",
       distributor: "Dell Technologies",
       icon: "💻",
-      rating: 4.6,
+      dailyAvgSales: 6,
       variants: [
         {
           id: 301,
@@ -176,7 +176,7 @@ export default function Shelf() {
       subcategory: "Smartphones",
       distributor: "Samsung Electronics",
       icon: "📱",
-      rating: 4.7,
+      dailyAvgSales: 8,
       variants: [
         {
           id: 401,
@@ -196,7 +196,7 @@ export default function Shelf() {
       subcategory: "Laptops",
       distributor: "HP",
       icon: "💻",
-      rating: 4.5,
+      dailyAvgSales: 5,
       variants: [
         {
           id: 501,
@@ -216,7 +216,7 @@ export default function Shelf() {
       subcategory: "Smartphones",
       distributor: "Google",
       icon: "📱",
-      rating: 4.6,
+      dailyAvgSales: 9,
       variants: [
         {
           id: 601,
@@ -237,7 +237,7 @@ export default function Shelf() {
       subcategory: "Casual Wear",
       distributor: "Fashion Co.",
       icon: "👕",
-      rating: 4.5,
+      dailyAvgSales: 15,
       variants: [
         {
           id: 701,
@@ -266,7 +266,7 @@ export default function Shelf() {
       subcategory: "Casual Wear",
       distributor: "Denim World",
       icon: "👖",
-      rating: 4.3,
+      dailyAvgSales: 10,
       variants: [
         {
           id: 801,
@@ -286,7 +286,7 @@ export default function Shelf() {
       subcategory: "Formal Wear",
       distributor: "Blazer House",
       icon: "🧥",
-      rating: 4.7,
+      dailyAvgSales: 4,
       variants: [
         {
           id: 901,
@@ -307,7 +307,7 @@ export default function Shelf() {
       subcategory: "Grains & Cereals",
       distributor: "Organic Farms Ltd.",
       icon: "🍚",
-      rating: 4.6,
+      dailyAvgSales: 20,
       variants: [
         {
           id: 1001,
@@ -327,7 +327,7 @@ export default function Shelf() {
       subcategory: "Fruits & Vegetables",
       distributor: "Fruit Mart",
       icon: "🍎",
-      rating: 4.8,
+      dailyAvgSales: 25,
       variants: [
         {
           id: 1101,
@@ -347,7 +347,7 @@ export default function Shelf() {
       subcategory: "Dairy",
       distributor: "Dairy Best",
       icon: "🥛",
-      rating: 4.7,
+      dailyAvgSales: 18,
       variants: [
         {
           id: 1201,
@@ -443,7 +443,7 @@ export default function Shelf() {
     return cartItems.reduce((total, item) => total + item.totalPrice, 0).toLocaleString();
   };
 
-  // First, add this helper function inside your component
+// First, add this helper function inside your component
 const hasAnyQuantities = () => {
   return Object.values(orderQuantities).some(item => item.quantity > 0);
 };
@@ -492,10 +492,8 @@ const addAllToCart = () => {
   setOrderQuantities(resetQuantities);
 };
 
-// Add this JSX right before the closing </div> of the main container￼
-
+// Add this JSX right before the closing </div> of the main container
 // (before the Cart Sidebar)
-
   const handleCheckout = async () => {
     try {
       setIsLoading(true);
@@ -695,7 +693,7 @@ const addAllToCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-300 shadow-lg border-b">
+      <div className="top-0 z-50 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 shadow-lg">
         <div className="px-3 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Left: Inventory Title, Address, Product Count */}
           <div className="flex-1">
@@ -707,6 +705,7 @@ const addAllToCart = () => {
                 {currentProducts.length} products
               </span>
             </div>
+            
             <div className="mt-1 text-white text-sm sm:text-base opacity-90">
               123, Main Bazaar Road, Connaught Place, New Delhi, 110001
             </div>
@@ -818,10 +817,10 @@ const addAllToCart = () => {
       </div>
 
       {/* Category Tabs Bar */}
-      <div className="relative z-30">
+      <div className="relative z-30 y-auto">
         <div className="w-full flex items-stretch relative bg-white border-b shadow-sm">
           {/* Tabs */}
-          <div className="flex overflow-x-auto scrollbar-hide flex-1 relative z-10">
+          <div className="flex overflow-x-auto overflow-y-hidden scrollbar-hide flex-1 relative z-10 y-auto">
             {Object.keys(categoryStructure).map((cat) => (
               <button
                 key={cat}
@@ -840,7 +839,8 @@ const addAllToCart = () => {
                   border: "none",
                   background: activeCategory === cat ? "linear-gradient(90deg, #0096FF 0%, #0F52BA 100%)" : "transparent",
                   zIndex: activeCategory === cat ? 20 : 10,
-                  marginBottom: activeCategory === cat ? "-1px" : "0"
+                  marginTop: activeCategory === cat ? "-6px" : "0",
+                  marginBottom: activeCategory === cat ? "-3px" : "0"
                 }}
               >
                 {cat}
@@ -887,33 +887,40 @@ const addAllToCart = () => {
           className="w-full transition-all duration-300"
           style={{
             background: "#F0FFFF",
-            minHeight: "0.5rem",
-            height: activeCategory ? "2.5rem" : "0.5rem"
+            minHeight: "0rem",
+            height: "0rem"
           }}
         />
       </div>
 
       {/* Main Content: Subcategories + Products */}
       <div
-        className="flex w-full px-1 sm:px-6 py-4 sm:py-8 gap-2 sm:gap-6"
+        className="flex w-full px-0 sm:px-6 py-4 sm:py-8 gap-2 sm:gap-6"
         style={{
           background: activeCategory ? "##F0FFFF" : undefined,
           transition: "background 0.3s"
         }}
       >
         {/* Subcategory Area */}
-        <div className="w-1/3 sm:w-full max-w-xs md:max-w-sm lg:max-w-md flex-shrink-0">
-          <div className="bg-white rounded-lg shadow border p-2 sm:p-4 sticky top-[120px]">
-            <h3 className="text-base sm:text-lg font-bold text-sky-700 mb-2 sm:mb-3">Subcategories</h3>
-            <div className="flex flex-col gap-1 sm:gap-2">
+        <div
+          className="flex-shrink-0"
+          style={{
+            width: "140px",
+            minWidth: "100px",
+            maxWidth: "180px"
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-4 sticky top-[120px] mb-4">
+            <h3 className="text-lg font-bold text-blue-900 mb-3">Subcategories</h3>
+            <div className="flex flex-col gap-2">
               {Object.keys(categoryStructure[activeCategory] || {}).map(subcat => (
                 <button
                   key={subcat}
                   onClick={() => handleSubcategoryClick(subcat)}
                   className={`text-left px-3 py-2 rounded-lg font-medium transition-colors ${
                     activeSubcategory === subcat
-                      ? "bg-blue-600 text-white shadow"
-                      : "bg-gray-100 text-gray-700 hover:bg-sky-100"
+                      ? "bg-blue-900 text-white border-blue-700 shadow"
+                      : "bg-blue-50 text-blue-900 border-blue-100 hover:bg-blue-100"
                   }`}
                   style={{
                     fontWeight: activeSubcategory === subcat ? 700 : 500,
@@ -928,7 +935,7 @@ const addAllToCart = () => {
         </div>
         {/* Product Area */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-lg shadow-sm border overflow-auto relative">
+          <div className="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-4 sticky top-[120px] mb-4">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
@@ -936,14 +943,14 @@ const addAllToCart = () => {
                     <th className="text-left p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900">Product</th>
                     <th className="text-left p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900 hidden sm:table-cell">Distributor</th>
                     <th className="text-left p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900">Price Range</th>
-                    <th className="text-left p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900 hidden lg:table-cell">Rating</th>
+                    <th className="text-left p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900 hidden lg:table-cell">Daily Avg Sales</th>
                     <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-semibold text-gray-900">Stock Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {currentProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12 text-gray-400">
+                      <td colSpan={5} className="bg-white rounded-xl shadow-sm border-2 border-blue-100 p-8 text-center text-gray-400 w-full">
                         No products found for this category/subcategory.
                       </td>
                     </tr>
@@ -1079,8 +1086,9 @@ const addAllToCart = () => {
                           </td>
                           <td className="p-2 sm:p-4 hidden lg:table-cell">
                             <div className="flex items-center">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-xs sm:text-sm text-gray-600 ml-1">{product.rating}</span>
+                              <span className="text-xs sm:text-sm text-gray-700 font-semibold">
+                                {product.dailyAvgSales} /day
+                              </span>
                             </div>
                           </td>
                           <td className="p-2 sm:p-4 text-right">

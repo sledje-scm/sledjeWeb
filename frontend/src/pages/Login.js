@@ -1,39 +1,42 @@
 import { useState } from "react";
-import { Lock, User, ShieldCheck } from "lucide-react";
+import { Lock, User, ShieldCheck, Loader2 } from "lucide-react"; // Add Loader2 for spinner
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api";
+import { useAuth } from "../components/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState(""); 
   const [otp, setOtp] = useState(""); 
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false); // <-- Spinner state
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // Flag to control whether we are in test mode or real login mode
-  const isTestMode = true; // Set to `true` for testing, `false` for real login
+  const isTestMode = false; // Set to `true` for testing, `false` for real login
 
   const handleLogin = async () => {
+    if (loading) return; // Prevent double click
     try {
+      setLoading(true); // Start spinner
       if (isTestMode) {
-        // Skip the actual login process for testing
         console.log('Test mode - bypassing login.');
         localStorage.setItem('userInfo', JSON.stringify({ username: 'Test User', token: 'fake-token' }));
-        navigate("/layout"); // Redirect to the layout page directly
+        navigate("/layout");
         return;
       }
-
-      // Real login flow
       const { data } = await API.post('/retailers/login', {
         email,
         password,
       });
-
       console.log('Logged in:', data);
       localStorage.setItem('userInfo', JSON.stringify(data));
-      navigate("/layout"); // Redirect to the layout page after login
+      login();
+      navigate("/layout");
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false); // Stop spinner
     }
   };
 
@@ -55,6 +58,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 bg-transparent focus:outline-none"
+              disabled={loading}
             />
           </div>
           <div className="flex items-center border rounded-md px-3 py-2 bg-gray-50">
@@ -65,13 +69,24 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="flex-1 bg-transparent focus:outline-none"
+              disabled={loading}
             />
           </div>
           <button 
-            onClick={handleLogin} // Call handleLogin instead of onLoginSuccess
-            className="w-full bg-gradient-to-r from-blue-700 to-indigo-900 text-white py-3 rounded-md shadow-md text-lg font-semibold hover:scale-105 transition-transform"
+            onClick={handleLogin}
+            disabled={loading}
+            className={`w-full bg-gradient-to-r from-blue-700 to-indigo-900 text-white py-3 rounded-md shadow-md text-lg font-semibold transition-transform
+              ${loading ? "opacity-70 cursor-not-allowed" : "hover:scale-105"}
+            `}
           >
-            Next
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="animate-spin w-5 h-5" />
+                Signing in...
+              </span>
+            ) : (
+              "Next"
+            )}
           </button>
         </div>
       ) : (

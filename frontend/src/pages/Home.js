@@ -1,42 +1,15 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Layers } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { BarChart, CreditCard, Package, ShoppingCart, TrendingUp, Users } from "lucide-react";
-import Login from "./Login";
-import logo from "../assets/navBarLogo.png";
-import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
+
 
 
 export default function LandingPage() {
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const navigate = useNavigate();
-  let lastScrollY = 0;
+  
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowNavbar(window.scrollY < lastScrollY);
-      lastScrollY = window.scrollY;
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleLoginSuccess = () => {
-    setShowLoginModal(false);
-    navigate("/layout/shop"); // Navigate directly to the Shop page
-  };
-
-  const handleLoginClick = () => {
-    setShowLoginModal(true);
-  };
 
   return (
-    <div className={`min-h-screen bg-white text-gray-900 ${showLoginModal ? "blur-background" : ""}`}>
-      {/* Navbar */}
-      <Navbar onLoginClick={handleLoginClick} />
+    <div className={`min-h-screen bg-white text-gray-900 `}>
+  
 
       {/* Hero Section */}
       <section
@@ -58,20 +31,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm"
-          onClick={() => setShowLoginModal(false)}
-        >
-          <div
-            className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Login onLoginSuccess={handleLoginSuccess} />
-          </div>
-        </div>
-      )}
+      
 
       {/* Features Section */}
       <section className="py-16 px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
