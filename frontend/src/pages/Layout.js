@@ -176,7 +176,7 @@ export default function Layout() {
             className="absolute top-0 h-0.5 bg-white transition-all duration-300 ease-in-out"
             style={{
               left: `${activeItemPosition.left - 10}px`,
-              width: `${activeItemPosition.width + 10}px`
+              width: `${activeItemPosition.width + 20}px`
             }}
           />
         </div>

@@ -23,7 +23,7 @@ export default function NavbarWrapper({ children }) {
       {/* Login Modal */}
       {isLoginModalOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"  style={{ zIndex: 9999 }}
           onClick={closeLoginModal}
         >
           <div

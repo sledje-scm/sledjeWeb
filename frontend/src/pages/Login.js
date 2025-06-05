@@ -13,7 +13,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const isTestMode = false; // Set to `true` for testing, `false` for real login
+  const isTestMode = true; // Set to `true` for testing, `false` for real login
 
   const handleLogin = async () => {
     if (loading) return; // Prevent double click
@@ -45,7 +45,8 @@ export default function Login() {
   };
 
   return (
-    <div className="p-8 rounded-lg w-full bg-transparent backdrop-blur-xl">
+    
+    <div className="p-8 rounded-lg w-full bg-transparent backdrop-blur-xl" >
       <h2 className="text-3xl font-extrabold text-center text-gray-900">Login</h2>
       <p className="text-center text-gray-600 mt-2">Access your account securely</p>
       {step === 1 ? (
