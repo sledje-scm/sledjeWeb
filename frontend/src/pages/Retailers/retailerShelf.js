@@ -62,7 +62,7 @@ const categoryStructure = {
   }
 };
 
-export default function Shelf() {
+export default function RetailerShelf() {
   // --- STATE ---
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [filterType, setFilterType] = useState("all");

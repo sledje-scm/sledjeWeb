@@ -2,45 +2,52 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 // Components
-import NavbarWrap from "./components/Structure";
+import NavbarWrap from "./pages/Landing/Structure";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./components/AuthContext";
 // Pages
-import Home from "./pages/Home";
-import Layout from "./pages/Layout";
-import Shop from "./pages/Shop";
-import Shelf from "./pages/Shelf";
-import Orders from "./pages/Orders";
-import Payment from "./pages/Payment";
-import You from "./pages/You";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Home from "./pages/Landing/Home";
+import RetailerLayout from "./pages/Retailers/retailerLayout";
+import RetailerShop from "./pages/Retailers/retailerShop";
+import RetailerShelf from "./pages/Retailers/retailerShelf";
+import RetailerOrders from "./pages/Retailers/retailerOrders";
+import RetailerPayment from "./pages/Retailers/retailerPayment";
+import RetailerYou from "./pages/Retailers/retailerYou";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 
+// Distributor Layout
+import DistributorLayout from "./pages/Distributors/distributorLayout";
+import DistributorProducts from "./pages/Distributors/distributorProducts";
+import DistributorOrders from "./pages/Distributors/distributorOrders";
+import DistributorOverview from "./pages/Distributors/distributorOverview";
+import DistributorPayments from "./pages/Distributors/distributorPayments";
+import DistributorProfile from "./pages/Distributors/distributorProfile";
 
 // Vision Pages
-import Goals from "./pages/Vision/Goals";
-import Founders from "./pages/Vision/Founders";
-import Investors from "./pages/Vision/Investors";
+import Goals from "./pages/Landing/Vision/Goals";
+import Founders from "./pages/Landing/Vision/Founders";
+import Investors from "./pages/Landing/Vision/Investors";
 
 // Support Pages
-import ContactUs from "./pages/Support/ContactUs";
-import Grievances from "./pages/Support/Grievances";
-import Tracking from "./pages/Support/Tracking";
+import ContactUs from "./pages/Landing/Support/ContactUs";
+import Grievances from "./pages/Landing/Support/Grievances";
+import Tracking from "./pages/Landing/Support/Tracking";
 
 // Services Pages
-import InventoryManagement from "./pages/Services/InventoryManagement";
-import BillingCreditManagement from "./pages/Services/BillingCreditManagement";
-import CustomerAutomation from "./pages/Services/CustomerAutomation";
-import SupplyChainOptimizations from "./pages/Services/SupplyChainOptimizations";
-import AIDrivenAnalytics from "./pages/Services/AIDrivenAnalytics";
+import InventoryManagement from "./pages/Landing/Services/InventoryManagement";
+import BillingCreditManagement from "./pages/Landing/Services/BillingCreditManagement";
+import CustomerAutomation from "./pages/Landing/Services/CustomerAutomation";
+import SupplyChainOptimizations from "./pages/Landing/Services/SupplyChainOptimizations";
+import AIDrivenAnalytics from "./pages/Landing/Services/AIDrivenAnalytics";
 
 // Partners Pages
-import Retailers from "./pages/Partners/Retailers";
-import Distributors from "./pages/Partners/Distributors";
-import DeliveryPartners from "./pages/Partners/DeliveryPartners";
+import Retailers from "./pages/Landing/Partners/Retailers";
+import Distributors from "./pages/Landing/Partners/Distributors";
+import DeliveryPartners from "./pages/Landing/Partners/DeliveryPartners";
 
 // Not Found Page
-import NotFound from "./pages/NotFound";
+import NotFound from "./components/NotFound";
 
 function App() {
   return (
@@ -59,10 +66,10 @@ function App() {
 
         {/* Layout Page with Default Redirect */}
         <Route
-          path="/layout"
+          path="/retailer"
           element={
             <PrivateRoute>
-               <Layout />
+               <RetailerLayout/>
             </PrivateRoute>
              
           }
@@ -70,12 +77,21 @@ function App() {
         >
           {/* Redirect /layout to /layout/shop */}
           <Route index element={<Navigate to="shop" replace />} />
-          <Route path="shop" element={<Shop />} />
-          <Route path="shelf" element={<Shelf />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="you" element={<You />} />
+          <Route path="shop" element={<RetailerShop />} />
+          <Route path="shelf" element={<RetailerShelf />} />
+          <Route path="orders" element={<RetailerOrders />} />
+          <Route path="payment" element={<RetailerPayment />} />
+          <Route path="you" element={<RetailerYou />} />
         </Route>
+
+        <Route path="/distributor" element={<PrivateRoute><DistributorLayout /></PrivateRoute>}>
+        <Route index element={<Navigate to="orders" replace />} />
+         <Route path="products" element={<DistributorProducts />} />
+         <Route path="orders" element={<DistributorOrders />} />
+         <Route path="overview" element={<DistributorOverview />} />
+         <Route path="payments" element={<DistributorPayments />} />
+         <Route path="profile" element={<DistributorProfile />} />
+       </Route>
 
         {/* Vision Pages */}
         <Route

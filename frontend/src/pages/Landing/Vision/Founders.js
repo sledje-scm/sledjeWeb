@@ -2,8 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 // Import images
-import NishantImage from "../../assets/founders/N.png";
-import GunjanImage from "../../assets/founders/G.jpeg";
+import NishantImage from "../../../assets/founders/N.png";
+import GunjanImage from "../../../assets/founders/G.jpeg";
 
 export default function Founders() {
   return (

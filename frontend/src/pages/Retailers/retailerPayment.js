@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Calendar, TrendingUp, DollarSign, Clock, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 
-const Payment = () => {
+const RetailerPayment = () => {
   const [selectedDistributors, setSelectedDistributors] = useState(new Set());
   const [expandedDistributors, setExpandedDistributors] = useState(new Set());
   const [expandedBills, setExpandedBills] = useState(new Set());
@@ -246,29 +246,29 @@ const Payment = () => {
   return (
     <div className="min-h-screen bg-blue-50">
       {/* Header */}
-      <div className="bg-blue-900 text-white">
+      <div className="bg-blue-900 text-white sm">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold mb-2">Payment Settlement Hub</h1>
               <p className="text-blue-300 text-lg">Manage distributor payments and track performance</p>
             </div>
-            <div className="bg-blue-800 rounded-xl p-6">
+            <div className="bg-blue-800 hidden md:block rounded-xl p-6">
               <div className="grid grid-cols-2 gap-6 text-center">
                 <div>
-                  <div className="text-2xl font-bold">{formatCurrency(totalTodaysSales)}</div>
+                  <div className="text-2xl font-bold sm:text-xl">{formatCurrency(totalTodaysSales)}</div>
                   <div className="text-blue-300 text-sm">Today's Sales</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">{formatCurrency(totalWeeklySales)}</div>
+                  <div className="text-2xl font-bold sm:text-xl">{formatCurrency(totalWeeklySales)}</div>
                   <div className="text-blue-300 text-sm">Weekly Sales</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold">{formatCurrency(totalTodaysProfit)}</div>
+                  <div className="text-lg font-bold sm:text-base">{formatCurrency(totalTodaysProfit)}</div>
                   <div className="text-blue-300 text-xs">Today's Profit</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold">{formatCurrency(totalWeeklyProfit)}</div>
+                  <div className="text-lg font-bold sm:text-base">{formatCurrency(totalWeeklyProfit)}</div>
                   <div className="text-blue-300 text-xs">Weekly Profit</div>
                 </div>
               </div>
@@ -525,4 +525,4 @@ const Payment = () => {
   );
 };
 
-export default Payment;
+export default RetailerPayment;

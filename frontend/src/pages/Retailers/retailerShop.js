@@ -104,7 +104,7 @@ const dummyPaymentOrders = [
   },
 ];
 
-const Shop = () => {
+const RetailerShop = () => {
   const [upcomingOrders, setUpcomingOrders] = useState(dummyOrders);
   const [paymentOrders, setPaymentOrders] = useState(dummyPaymentOrders);
   const [expandedCards, setExpandedCards] = useState({});
@@ -418,4 +418,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default RetailerShop;

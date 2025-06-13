@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import GunjanImage from "../assets/founders/G.jpeg";
+import GunjanImage from "../../assets/founders/G.jpeg";
 import { Trash, Check, CircleCheck, CreditCard, Phone } from "lucide-react";
 
 // Carousel card images
-import Card1 from "../assets/carousel/Card1.png";
-import Card2 from "../assets/carousel/Card2.png";
-import Card3 from "../assets/carousel/Card3.png";
-import Card4 from "../assets/carousel/Card4.png";
+import Card1 from "../../assets/carousel/Card1.png";
+import Card2 from "../../assets/carousel/Card2.png";
+import Card3 from "../../assets/carousel/Card3.png";
+import Card4 from "../../assets/carousel/Card4.png";
 
-export default function You() {
+export default function RetailerYou() {
   const favoriteDistributors = [
     { name: "Hindustan Distributors", contact: "+91 9876543210" },
     { name: "Bharat Traders", contact: "+91 9123456789" },

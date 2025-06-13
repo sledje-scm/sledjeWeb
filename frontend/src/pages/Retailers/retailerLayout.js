@@ -2,8 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PlaneLanding, Library, BanknoteArrowUp, Landmark, User, ScanBarcode, MoreVertical, LogOut } from "lucide-react";
-import logo from "../assets/navBarLogo1.png"; // Import your logo
-import {useAuth} from "../components/AuthContext.js"; // Import the AuthContext
+import {useAuth} from "../../components/AuthContext.js"; // Import the AuthContext
 
 function TogglingPaymentIcon() {
   const [showFirst, setShowFirst] = useState(true);
@@ -26,13 +25,13 @@ function TogglingPaymentIcon() {
   );
 }
 
-export default function Layout() {
+export default function RetailerLayout() {
   const navItems = [
-    { name: "Shop", to: "/layout/shop", icon: ScanBarcode },
-    { name: "Shelf", to: "/layout/shelf", icon: Library },
-    { name: "Payments", to: "/layout/payment", icon: TogglingPaymentIcon },
-    { name: "Orders", to: "/layout/orders", icon: PlaneLanding },
-    { name: "You", to: "/layout/you", icon: User },
+    { name: "Shop", to: "/retailer/shop", icon: ScanBarcode },
+    { name: "Shelf", to: "/retailer/shelf", icon: Library },
+    { name: "Payments", to: "/retailer/payment", icon: TogglingPaymentIcon },
+    { name: "Orders", to: "/retailer/orders", icon: PlaneLanding },
+    { name: "You", to: "/retailer/you", icon: User },
   ];
 
   const navigate = useNavigate();
@@ -95,7 +94,7 @@ export default function Layout() {
             <div className="flex items-center space-x-2 md:space-x-6 w-full md:w-auto">
               {/* Logo - Hidden on mobile */}
               <img
-                src={logo}
+                src={process.env.PUBLIC_URL + "/logo192.png"}
                 alt="Logo"
                 className="hidden md:block h-12 w-auto cursor-pointer"
                 onClick={() => navigate("/")}
@@ -176,7 +175,7 @@ export default function Layout() {
             className="absolute top-0 h-0.5 bg-white transition-all duration-300 ease-in-out"
             style={{
               left: `${activeItemPosition.left - 10}px`,
-              width: `${activeItemPosition.width + 10}px`
+              width: `${activeItemPosition.width + 20}px`
             }}
           />
         </div>
