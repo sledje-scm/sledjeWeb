@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Distributor from '../models/Distributor.js';
+import Distributor from '../models/distributor.js';
 
 /**
  * Authentication middleware for verifying JWT tokens
