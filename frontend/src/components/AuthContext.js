@@ -2,23 +2,36 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext();
 
+// ====== TOGGLE THIS FLAG FOR TEST MODE ======
+const TEST_MODE = true; // Set to true for test mode, false for actual mode
+// ============================================
+
+export const isTestMode = () => TEST_MODE;
+
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check authentication status from localStorage on app load
   useEffect(() => {
-    const storedAuth = localStorage.getItem("isAuthenticated");
-    setIsAuthenticated(storedAuth === "true");
+    if (isTestMode()) {
+      setIsAuthenticated(true);
+    } else {
+      const storedAuth = localStorage.getItem("isAuthenticated");
+      setIsAuthenticated(storedAuth === "true");
+    }
   }, []);
 
   const login = () => {
     setIsAuthenticated(true);
-    localStorage.setItem("isAuthenticated", "true"); // Persist login state
+    if (!isTestMode()) {
+      localStorage.setItem("isAuthenticated", "true");
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("isAuthenticated"); // Clear login state
+    if (!isTestMode()) {
+      localStorage.removeItem("isAuthenticated");
+    }
   };
 
   return (
