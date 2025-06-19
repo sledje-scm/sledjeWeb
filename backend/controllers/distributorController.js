@@ -1,4 +1,4 @@
-import Distributor from '../models/Distributor.js';
+import Distributor from '../models/distributor.js';
 import generateToken from '../utils/generateToken.js';
 
 /**
