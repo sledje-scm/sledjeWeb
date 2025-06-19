@@ -1,21 +1,26 @@
 import express from 'express';
 import {
+  getProducts,
   addProduct,
   updateProduct,
   deleteProduct,
 } from '../controllers/productController.js';
-import { authenticate, authorize } from '../middleware/retailerMiddleware.js';
+import { authenticate, authorize } from '../middleware/distributorMiddleware.js';
+
 
 const router = express.Router();
 
+
+router.post('/add', authenticate, addProduct);
+
 // Add a new product
-router.post('/', authenticate, authorize('retailer'), addProduct);
+router.get('/get', getProducts);
 
 // Update an existing product
-router.put('/:productId', authenticate, authorize('retailer'), updateProduct);
+router.put('/:productId', authenticate,updateProduct);
 
 // Delete a product
-router.delete('/:productId', authenticate, authorize('retailer'), deleteProduct);
+router.delete('/:productId', authenticate,  deleteProduct);
 
 export default router;
 // ```

@@ -41,7 +41,12 @@ const retailerSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Distributor' 
       }
-    ]
+    ],
+    role: {
+      type: String,
+      enum: ['retailer'],
+      default: 'retailer',
+      }
   },
   {
     timestamps: true,

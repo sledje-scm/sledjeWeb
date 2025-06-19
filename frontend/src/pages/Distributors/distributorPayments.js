@@ -31,17 +31,10 @@ export default function DistributorPayments() {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-white min-h-screen md:pl-16 md:pr-16">
-     <h2 className="text-4xl md:text-5xl font-bold md:leading-tight mb-6 tracking-tight text-between md:pt-4 md:pl-4">
-              <span className="bg-black bg-clip-text text-transparent font-eudoxus">
-                Receive Quickly, 
-              </span>
-              <span className="bg-gradient-to-r from-purple-500 via-violet-500 to-teal-400 bg-clip-text text-transparent font-eudoxus pl-2">
-                 Payments
-              </span>
-            </h2>
+    <div className="p-4 md:p-8 bg-blue-50 min-h-screen">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Retailer Payments</h1>
 
-      <div className="bg-white rounded-3xl shadow p-4 ">
+      <div className="bg-white rounded-2xl shadow p-4">
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto text-sm">
             <thead>
@@ -97,32 +90,23 @@ export default function DistributorPayments() {
           </table>
         </div>
       </div>
-      <div className="flex flex-col lg:flex-row gap-6 mt-10 w-full">
-  {/* Customer Support Section */}
-  <div className="flex-1 bg-white rounded-3xl shadow-xl p-8 border border-gray-200">
-    <h2 className="text-2xl font-semibold text-gray-900 mb-3">Need Help? Contact Support</h2>
-    <p className="text-gray-600 mb-6">
-      Questions or concerns about your account? Reach out and we’ll get back to you as soon as possible.
-    </p>
-    <a
-      href="mailto:support@yourcompany.com"
-      className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition"
-    >
-      <MessageCircle size={18} />
-      Write to Us
-    </a>
-  </div>
 
-  {/* Payment History Section */}
-  <div className="flex-1 bg-gradient-to-r from-purple-500 via-violet-500 to-teal-400 rounded-3xl shadow-xl p-8 border border-gray-200 flex items-center justify-center opacity-60">
-    <div className="text-center">
-      <h2 className="text-2xl font-semibold text-white mb-2">Payment History</h2>
-      <p className="text-white">Coming Soon</p>
-    </div>
-  </div>
-</div>
-
+      {/* Customer Support */}
+      <div className="mt-8 bg-white rounded-2xl shadow p-4">
+        <h2 className="text-xl font-semibold mb-2 text-gray-800">
+          Need Help? Contact Customer Support
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          If a retailer disputes a payment, contact our support team.
+        </p>
+        <a
+          href="mailto:support@yourcompany.com"
+          className="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600 transition"
+        >
+          <MessageCircle size={18} />
+          Email Support
+        </a>
       </div>
-
+    </div>
   );
 }

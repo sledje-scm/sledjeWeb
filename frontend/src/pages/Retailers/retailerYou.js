@@ -8,7 +8,7 @@ import Card2 from "../../assets/carousel/Card2.png";
 import Card3 from "../../assets/carousel/Card3.png";
 import Card4 from "../../assets/carousel/Card4.png";
 
-export default function You() {
+export default function RetailerYou() {
   const favoriteDistributors = [
     { name: "Hindustan Distributors", contact: "+91 9876543210" },
     { name: "Bharat Traders", contact: "+91 9123456789" },
@@ -64,21 +64,14 @@ export default function You() {
   }, [scrollPos]);
 
   return (
-    <div className="min-h-screen bg-white p-3 md:p-6 flex flex-col lg:flex-row gap-3 md:gap-6 md:pl-16">
+    <div className="min-h-screen bg-blue-100 p-3 md:p-6 flex flex-col lg:flex-row gap-3 md:gap-6">
       {/* Your Account Section */}
-      <div className="flex-1 bg-white text-white rounded-3xl  p-4 md:p-6 ">
-                <h2 className="text-4xl md:text-5xl font-bold md:leading-tight mb-6 tracking-tight text-between md:pt-4">
-              <span className="bg-black bg-clip-text text-transparent font-eudoxus">
-                Everything about
-              </span>
-              <span className="bg-gradient-to-r from-purple-500 via-violet-500 to-teal-400 bg-clip-text text-transparent font-eudoxus pl-2">
-                 You
-              </span>
-            </h2>
+      <div className="flex-1 bg-blue-600 text-white rounded-lg shadow-lg p-4 md:p-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Your Account</h1>
 
         {/* Account Areas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-6 md:mb-10">
-          <div className="flex items-center bg-blue-800 p-3 md:p-4 rounded-3xl shadow">
+          <div className="flex items-center bg-blue-700 p-3 md:p-4 rounded-lg shadow">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
               <CircleCheck className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
             </div>
@@ -88,7 +81,7 @@ export default function You() {
             </div>
           </div>
 
-          <div className="flex items-center bg-blue-800 p-3 md:p-4 rounded-3xl shadow">
+          <div className="flex items-center bg-blue-700 p-3 md:p-4 rounded-lg shadow">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Check className="w-6 h-6 md:w-8 md:h-8 text-yellow-600" />
             </div>
@@ -98,7 +91,7 @@ export default function You() {
             </div>
           </div>
 
-          <div className="flex items-center bg-blue-800 p-3 md:p-4 rounded-3xl shadow">
+          <div className="flex items-center bg-blue-700 p-3 md:p-4 rounded-lg shadow">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Trash className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
             </div>
@@ -108,7 +101,7 @@ export default function You() {
             </div>
           </div>
 
-          <div className="flex items-center bg-blue-800 p-3 md:p-4 rounded-3xl shadow">
+          <div className="flex items-center bg-blue-700 p-3 md:p-4 rounded-lg shadow">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
               <CreditCard className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
             </div>
@@ -118,7 +111,7 @@ export default function You() {
             </div>
           </div>
 
-          <div className="flex items-center bg-blue-800 p-3 md:p-4 rounded-3xl shadow sm:col-span-1">
+          <div className="flex items-center bg-blue-700 p-3 md:p-4 rounded-lg shadow sm:col-span-2">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Phone className="w-6 h-6 md:w-8 md:h-8 text-pink-600" />
             </div>
@@ -156,22 +149,22 @@ export default function You() {
       </div>
 
       {/* Personal Details Section */}
-      <div className="w-full lg:w-2/5 bg-white rounded-lg shadow-lg p-4 md:p-6 md:mt-16 md:pr-14">
-        <h2 className="text-xl md:text-2xl font-bold text-blue-900 mb-3 md:mb-4 font-eudoxus">Personal Details</h2>
-        <div className="flex flex-col sm:flex-row items-center sm:items-start bg-blue-50 p-3 md:p-4 rounded-3xl shadow mb-4 md:mb-6">
+      <div className="w-full lg:w-2/5 bg-white rounded-lg shadow-lg p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-blue-800 mb-3 md:mb-4">Personal Details</h2>
+        <div className="flex flex-col sm:flex-row items-center sm:items-start bg-blue-50 p-3 md:p-4 rounded-lg shadow mb-4 md:mb-6">
           <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-300 rounded-full overflow-hidden flex-shrink-0 mb-3 sm:mb-0">
             <img src={GunjanImage} alt="Owner" className="w-full h-full object-cover" />
           </div>
           <div className="sm:ml-4 text-center sm:text-left">
-            <h3 className="text-lg md:text-xl font-semibold text-blue-900">Gunjan Sharma</h3>
-            <p className="text-sm md:text-base text-blue-800">Owner : Hindu Pharma</p>
-            <p className="text-sm md:text-base text-blue-600 break-all sm:break-normal">Email: akash2244@gmail.com</p>
-            <p className="text-sm md:text-base text-blue-600">Phone: +91 9876543210</p>
+            <h3 className="text-lg md:text-xl font-semibold text-blue-800">Gunjan Sharma</h3>
+            <p className="text-sm md:text-base text-gray-600">Owner : Hindu Pharma</p>
+            <p className="text-sm md:text-base text-gray-600 break-all sm:break-normal">Email: akash2244@gmail.com</p>
+            <p className="text-sm md:text-base text-gray-600">Phone: +91 9876543210</p>
           </div>
         </div>
 
-        <div className="bg-blue-100 p-3 md:p-4 rounded-3xl shadow">
-          <h3 className="text-base md:text-lg font-semibold text-blue-900 mb-2">Favourite Distributors</h3>
+        <div className="bg-blue-50 p-3 md:p-4 rounded-lg shadow">
+          <h3 className="text-base md:text-lg font-semibold text-blue-800 mb-2">Favourite Distributors</h3>
           <div className="overflow-y-auto" style={{ maxHeight: "150px" }}>
             {favoriteDistributors.map((distributor, index) => (
               <div

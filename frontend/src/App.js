@@ -2,28 +2,27 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 // Components
-import NavbarWrap from "./components/Structure";
+import NavbarWrap from "./pages/Landing/Structure";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./components/AuthContext";
 // Pages
 import Home from "./pages/Landing/Home";
-import Layout from "./components/Layout";
-import Shop from "./pages/Retailers/retailerShop";
-import Shelf from "./pages/Retailers/retailerShelf";
-import Orders from "./pages/Retailers/retailerOrders";
-import Payment from "./pages/Retailers/retailerPayment";
-import You from "./pages/Retailers/retailerYou";
+import RetailerLayout from "./pages/Retailers/retailerLayout";
+import RetailerShop from "./pages/Retailers/retailerShop";
+import RetailerShelf from "./pages/Retailers/retailerShelf";
+import RetailerOrders from "./pages/Retailers/retailerOrders";
+import RetailerPayment from "./pages/Retailers/retailerPayment";
+import RetailerYou from "./pages/Retailers/retailerYou";
 import Login from "./components/Login";
-import Signup from "./pages/Utilities/Signup";
-import Test from "./pages/Utilities/Resources";
+import Signup from "./components/Signup";
 
+// Distributor Layout
 import DistributorLayout from "./pages/Distributors/distributorLayout";
 import DistributorProducts from "./pages/Distributors/distributorProducts";
 import DistributorOrders from "./pages/Distributors/distributorOrders";
 import DistributorOverview from "./pages/Distributors/distributorOverview";
 import DistributorPayments from "./pages/Distributors/distributorPayments";
 import DistributorProfile from "./pages/Distributors/distributorProfile";
-
 
 // Vision Pages
 import Goals from "./pages/Landing/Vision/Goals";
@@ -48,7 +47,7 @@ import Distributors from "./pages/Landing/Partners/Distributors";
 import DeliveryPartners from "./pages/Landing/Partners/DeliveryPartners";
 
 // Not Found Page
-import NotFound from "./pages/Utilities/NotFound";
+import NotFound from "./components/NotFound";
 
 function App() {
   return (
@@ -67,24 +66,25 @@ function App() {
 
         {/* Layout Page with Default Redirect */}
         <Route
-          path="/layout"
+          path="/retailer"
           element={
             <PrivateRoute>
-               <Layout />
+               <RetailerLayout/>
             </PrivateRoute>
              
           }
+          
         >
           {/* Redirect /layout to /layout/shop */}
           <Route index element={<Navigate to="shop" replace />} />
-          <Route path="shop" element={<Shop />} />
-          <Route path="shelf" element={<Shelf />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="you" element={<You />} />
+          <Route path="shop" element={<RetailerShop />} />
+          <Route path="shelf" element={<RetailerShelf />} />
+          <Route path="orders" element={<RetailerOrders />} />
+          <Route path="payment" element={<RetailerPayment />} />
+          <Route path="you" element={<RetailerYou />} />
         </Route>
 
-          {/* Distributor Routes */}<Route path="/distributor" element={<PrivateRoute><DistributorLayout /></PrivateRoute>}>
+        <Route path="/distributor" element={<PrivateRoute><DistributorLayout /></PrivateRoute>}>
         <Route index element={<Navigate to="orders" replace />} />
          <Route path="products" element={<DistributorProducts />} />
          <Route path="orders" element={<DistributorOrders />} />
@@ -238,14 +238,6 @@ function App() {
             <NavbarWrap>
               <NotFound />
             </NavbarWrap>
-          }
-        />
-         <Route
-          path="/Test"
-          element={
-            
-              <Test />
-            
           }
         />
       </Routes>

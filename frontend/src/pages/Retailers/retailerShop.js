@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Trash, Check, FileText, ArrowDown, ArrowUp, PlusCircle, X, } from "lucide-react";
-import CreateOrder from "../../components/CreateOrder";
+import { Trash, Check, FileText, ArrowDown, ArrowUp, PlusCircle } from "lucide-react";
+import CreateOrder from "./CreateOrder";
 
 const dummyOrders = [
   {
@@ -104,7 +104,7 @@ const dummyPaymentOrders = [
   },
 ];
 
-const Shop = () => {
+const RetailerShop = () => {
   const [upcomingOrders, setUpcomingOrders] = useState(dummyOrders);
   const [paymentOrders, setPaymentOrders] = useState(dummyPaymentOrders);
   const [expandedCards, setExpandedCards] = useState({});
@@ -185,129 +185,96 @@ const Shop = () => {
     setShowOrderModal(false);
   };
 
-const renderOrderCard = (order, isPayment = false) => (
-  <div
-    key={order.orderId}
-    className="w-full max-w-sm bg-white rounded-2xl shadow-md p-5 mx-2 font-[Eudoxus Sans] transition-all hover:shadow-lg border border-gray-100 relative"
-  >
-    {/* Card Delete (X) Icon - Top right */}
-    <X
-      className="absolute top-6 right-3 w-4 h-4 text-red-400 hover:text-red-600 cursor-pointer transition "
-      onClick={() => deleteOrderCard(order.orderId)}
-    />
-
-    {/* Customer Name */}
-    <div className="text-center font-bold text-gray-900 text-base mb-3">
-      {order.customerName || "Custom"}
-    </div>
-
-    {/* Item List */}
-    <div className="space-y-3">
-      {(expandedCards[order.orderId] ? order.items : order.items.slice(0, 3)).map((item) => (
-        <div
-          key={item.id}
-          className="flex justify-between items-start text-sm border-b pb-2 border-gray-200"
-        >
-          {/* Product Info */}
-          <div className="text-gray-800 text-xs font-medium w-2/3">
-            <p>{item.item} <span className="text-gray-400 font-normal">({item.brand})</span></p>
-          </div>
-
-          {/* Quantity & Delete */}
-          {!isPayment && (
-            <div className="flex items-center gap-1 w-1/3 justify-end">
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) => {
-                  const quantity = parseInt(e.target.value);
-                  setUpcomingOrders((prev) =>
-                    prev.map((o) =>
-                      o.orderId === order.orderId
-                        ? {
-                            ...o,
-                            items: o.items.map((i) =>
-                              i.id === item.id ? { ...i, quantity } : i
-                            ),
-                          }
-                        : o
-                    )
-                  );
-                }}
-                className="w-12 border border-gray-300 rounded-md px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
-              {item.unit && (
-                <span className="ml-1 text-gray-500 text-xs">{item.unit}</span>
+  const renderOrderCard = (order, isPayment = false) => (
+    <div key={order.orderId} className="min-w-[260px] max-w-xs bg-white rounded-lg shadow-md p-4 mx-2">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-md font-bold">{order.customerName || "Custom"}</h2>
+        <Trash
+          className="w-4 h-4 text-red-500 cursor-pointer"
+          onClick={() => deleteOrderCard(order.orderId)}
+        />
+      </div>
+      <div>
+        {(expandedCards[order.orderId] ? order.items : order.items.slice(0, 3)).map((item) => (
+          <div key={item.id} className="flex justify-between items-center text-sm border-b py-1">
+            <div>
+              <p>{item.item} ({item.brand})</p>
+              {!isPayment && (
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const quantity = parseInt(e.target.value);
+                      setUpcomingOrders((prev) =>
+                        prev.map((o) =>
+                          o.orderId === order.orderId
+                            ? {
+                                ...o,
+                                items: o.items.map((i) =>
+                                  i.id === item.id ? { ...i, quantity} : i
+                                ),
+                              }
+                            : o
+                        )
+                      );
+                    }}
+                    className="w-12 border rounded px-1 text-xs"
+                  />
+                  {item.unit && <span className="ml-1 text-xs text-gray-600">{item.unit}</span>}
+                </div>
               )}
-              <X
-                className="w-3 h-3 text-red-400 hover:text-red-600 transition cursor-pointer"
+            </div>
+            {!isPayment && (
+              <Trash
+                className="w-3 h-3 text-red-400 cursor-pointer"
                 onClick={() => deleteItem(order.orderId, item.id)}
               />
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Expand / Collapse */}
-      {order.items.length > 3 && (
-        <button
-          className="text-[11px] text-blue-500 hover:underline mt-1"
-          onClick={() => toggleExpand(order.orderId)}
-        >
-          {expandedCards[order.orderId] ? "View Less" : "View More"}
-        </button>
-      )}
-    </div>
-
-    {/* Total Row */}
-    <div className="mt-4 flex justify-between items-center text-sm text-gray-800 font-semibold">
-      <p>Total: ₹{calculateTotal(order.items)}</p>
-      {!isPayment && (
-        <Check
-          className="w-5 h-5 text-green-500 hover:text-green-600 cursor-pointer transition"
-          onClick={() => moveToPayment(order.orderId)}
-        />
-      )}
-    </div>
-
-    {/* Order ID */}
-    <p className="text-[11px] text-gray-400 mt-1">Order ID: {order.orderId}</p>
-
-    {/* Payment Buttons */}
-    {isPayment && (
-      <div className="flex gap-2 mt-4">
-        {["cash", "upi", "credit"].map((mode) => (
-          <button
-            key={mode}
-            onClick={() => handlePayment(order.orderId, mode)}
-            className="text-[11px] px-3 py-1 bg-black hover:bg-gray-900 text-white rounded-full transition"
-          >
-            {mode.toUpperCase()}
-          </button>
+            )}
+          </div>
         ))}
+        {order.items.length > 3 && (
+          <button
+            className="text-xs text-blue-500 mt-1"
+            onClick={() => toggleExpand(order.orderId)}
+          >
+            {expandedCards[order.orderId] ? "View Less" : "View More"}
+          </button>
+        )}
+        <p className="mt-2 text-sm font-semibold">Total: ₹{calculateTotal(order.items)}</p>
+        <p className="text-xs text-gray-500">Order ID: {order.orderId}</p>
+        {!isPayment ? (
+          <Check
+            className="w-5 h-5 text-green-600 cursor-pointer mt-2"
+            onClick={() => moveToPayment(order.orderId)}
+          />
+        ) : (
+          <div className="flex gap-2 mt-2">
+            {["cash", "upi", "credit"].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => handlePayment(order.orderId, mode)}
+                className="text-xs px-2 py-1 bg-black text-white rounded-full"
+              >
+                {mode.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    )}
-  </div>
-);
-
+    </div>
+  );
 
   return (
     <div className="p-6 space-y-8 bg-white min-h-screen">
-      <div className="flex justify-between items-center md:pl-16 md:pt-8">
-        <h2 className="text-4xl md:text-5xl font-bold md:leading-tight mb-6 tracking-tight text-between">
-              <span className="bg-black bg-clip-text text-transparent font-eudoxus">
-                Your Shop
-              </span>
-              <span className="bg-gradient-to-r from-purple-500 via-violet-500 to-teal-400 bg-clip-text text-transparent font-eudoxus pl-2">
-                 Dashboard
-              </span>
-            </h2>
-        <div className="flex justified-between md:gap-3 md:pr-[3.5rem] md:pb-8 gap-2">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Shop Dashboard</h1>
+        <div className="flex gap-4">
           {/* Create Order Button */}
           <button
           onClick={() => setShowOrderModal(true)}
-          className="flex items-center bg-black text-white px-4 py-4 rounded-full hover:bg-gray-800 "
+          className="flex items-center bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
         >
           <PlusCircle className="mr-2 w-4 h-4" /> Create Order
         </button>
@@ -322,21 +289,22 @@ const renderOrderCard = (order, isPayment = false) => (
             onClick={() => setShowReports((prev) => !prev)}
             className="flex items-center bg-gray-200 text-black px-4 py-2 rounded-full hover:bg-gray-300"
           >
-            <FileText className=" w-4 h-4" /> {showReports ? "Hide Reports" : "Show Reports"}
+            <FileText className="mr-2 w-4 h-4" /> {showReports ? "Hide Reports" : "Show Reports"}
           </button>
         </div>
       </div>
 
       {/* Flex container for Upcoming Orders and Payment Section */}
-      <div className=" flex lg:flex-row gap-6 md:pl-16 md:pr-16">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Upcoming Orders Section */}
-        <section style={{background: "linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}
-          className="p-5 rounded-3xl shadow-md flex-1"
+        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+          className="p-5 rounded-lg shadow-md flex-1"
         >
           <h2 className="text-xl font-semibold text-white mb-2">Upcoming Orders</h2>
           <div
             className="overflow-y-auto"
-            style={{ 
+            style={{
+              maxHeight: "600px",
             }}
           >
             <div className="grid gap-4"
@@ -351,13 +319,14 @@ const renderOrderCard = (order, isPayment = false) => (
         </section>
 
         {/* Payment Section */}
-        <section style={{background: "linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}
-          className=" p-5 rounded-3xl shadow-md flex-1 "
+        <section style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}
+          className=" p-4 rounded-lg shadow-md flex-1 "
         >
           <h2 className="text-xl font-semibold text-white mb-2">Payment Section</h2>
           <div
             className="overflow-y-auto"
             style={{
+              maxHeight: "600px",
             }}
           >
             <div className="grid gap-4 "
@@ -373,7 +342,7 @@ const renderOrderCard = (order, isPayment = false) => (
       </div>
 
       {/* Transaction History Section */}
-      <section className="p-4 rounded-3xl shadow-md mt-6 md:ml-16 md:mr-16" style={{background: " linear-gradient(to bottom, #0D47A1 0px, #1565c0 99px,  transparent 100px)"}}>
+      <section className="p-4 rounded-lg shadow-md mt-6" style={{background: "linear-gradient(to bottom, #1565c0 0px, #1565c0 99px,  transparent 100px)"}}>
         <h2 className="text-xl font-semibold text-white mb-2">Transaction History</h2>
         <div
           className="overflow-y-auto"
@@ -449,4 +418,4 @@ const renderOrderCard = (order, isPayment = false) => (
   );
 };
 
-export default Shop;
+export default RetailerShop;

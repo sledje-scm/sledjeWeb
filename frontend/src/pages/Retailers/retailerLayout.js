@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { PlaneTakeoff, BanknoteArrowUp, Landmark, User, ScanBarcode, MoreVertical, LogOut } from "lucide-react";
+import { PlaneLanding, Library, BanknoteArrowUp, Landmark, User, ScanBarcode, MoreVertical, LogOut } from "lucide-react";
 import {useAuth} from "../../components/AuthContext.js"; // Import the AuthContext
 
 function TogglingPaymentIcon() {
@@ -25,16 +25,14 @@ function TogglingPaymentIcon() {
   );
 }
 
-export default function Layout() {
-  
-const navItems = [
-  { name: "Orders", to: "/distributor/", icon: PlaneTakeoff},
-  { name: "Products", to: "/distributor/products", icon: ScanBarcode },
-  { name: "Overview", to: "/distributor/overview", icon: Landmark },
-  { name: "Payments", to: "/distributor/payments", icon: BanknoteArrowUp },
-  { name: "Profile", to: "/distributor/profile", icon: User },
-];
-
+export default function RetailerLayout() {
+  const navItems = [
+    { name: "Shop", to: "/retailer/shop", icon: ScanBarcode },
+    { name: "Shelf", to: "/retailer/shelf", icon: Library },
+    { name: "Payments", to: "/retailer/payment", icon: TogglingPaymentIcon },
+    { name: "Orders", to: "/retailer/orders", icon: PlaneLanding },
+    { name: "You", to: "/retailer/you", icon: User },
+  ];
 
   const navigate = useNavigate();
   const location = useLocation();

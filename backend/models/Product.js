@@ -38,6 +38,11 @@ const ProductSchema = new mongoose.Schema({
     ref: 'Distributor', 
     required: true 
   },
+  distributorships: {
+    type: [String],
+    enum: ['Groceries', 'Beverages', 'Personal Care'],
+    required: true
+  },
   id: { 
     type: Number, 
     required: true 

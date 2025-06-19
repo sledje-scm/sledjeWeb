@@ -62,7 +62,7 @@ const categoryStructure = {
   }
 };
 
-export default function Shelf() {
+export default function RetailerShelf() {
   // --- STATE ---
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [filterType, setFilterType] = useState("all");
@@ -693,134 +693,134 @@ const addAllToCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-<div className="top-0 z-50 bg-white font-eudoxus">
-  <div className="px-3 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-    
-    {/* Left: Inventory Title, Address, Product Count */}
-    <div className="flex-1">
-      <div className="flex items-center gap-4 flex-wrap md:pl-16 md:pt-4">
-        <h2 className="text-4xl md:text-5xl font-bold md:leading-tight mb-6 tracking-tight text-between">
-              <span className="bg-black bg-clip-text text-transparent font-eudoxus">
-                Your Own
+      <div className="top-0 z-50 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 shadow-lg">
+        <div className="px-3 sm:px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Left: Inventory Title, Address, Product Count */}
+          <div className="flex-1">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Inventory
+              </h1>
+              <span className="bg-white bg-opacity-20 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                {currentProducts.length} products
               </span>
-              <span className="bg-gradient-to-r from-purple-500 via-violet-500 to-teal-400 bg-clip-text text-transparent font-eudoxus pl-2">
-                 Inventory
-              </span>
-
-        </h2>
-        <span className="bg-gray-100 text-gray-800 px-3 rounded-full text-sm font-semibold shadow-sm mb-4">
-          {currentProducts.length} products
-        </span>
-      </div>
-      <div className="text-xl text-gray-600 mb-10  text-left pl-16 mb-8 font-eudoxus w-full pr-16">
+            </div>
+            
+            <div className="mt-1 text-white text-sm sm:text-base opacity-90">
               123, Main Bazaar Road, Connaught Place, New Delhi, 110001
-      </div>
-     
-    </div>
-
-    {/* Center: Search Bar */}
-    <div className="w-full sm:w-96 mt-4 sm:mt-0 md:pb-4">
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search products, distributors, variants..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            performGlobalSearch(e.target.value);
-          }}
-          className="w-full pl-10 md:pr-16 md:py-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm"
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        
-        {/* Voice Search Button */}
-        <button
-          onClick={isListening ? stopVoiceSearch : startVoiceSearch}
-          className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full transition-colors ${
-            isListening
-              ? 'bg-red-100 text-red-600 animate-pulse'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-        </button>
-
-        {/* Global Search Results */}
-        {showGlobalSearch && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto">
-            {searchResults.map(product => (
-              <div
-                key={`search-${product.id}`}
-                onClick={() => navigateToProduct(product)}
-                className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{product.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
-                      {highlightText(product.name, searchQuery)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {highlightText(product.distributor, searchQuery)} • {product.category} → {product.subcategory}
-                    </p>
-                    {product.matchType === 'variant' && (
-                      <p className="text-xs text-blue-600">
-                        Variants: {product.matchingVariants.map(v => v.name).join(', ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+            </div>
           </div>
-        )}
+          {/* Center: Search Bar */}
+          <div className="w-full sm:w-96 mt-4 sm:mt-0">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products, distributors, variants..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  performGlobalSearch(e.target.value);
+                }}
+                className="w-full pl-10 pr-16 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {/* Voice Search Button */}
+              <button
+                onClick={isListening ? stopVoiceSearch : startVoiceSearch}
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md transition-colors ${
+                  isListening
+                    ? 'bg-red-100 text-red-600 animate-pulse'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+              {/* Global Search Results */}
+              {showGlobalSearch && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {searchResults.map(product => (
+                    <div
+                      key={`search-${product.id}`}
+                      onClick={() => navigateToProduct(product)}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{product.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
+                            {highlightText(product.name, searchQuery)}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {highlightText(product.distributor, searchQuery)} • {product.category} → {product.subcategory}
+                          </p>
+                          {product.matchType === 'variant' && (
+                            <p className="text-xs text-blue-600">
+                              Variants: {product.matchingVariants.map(v => v.name).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Right: Select Distributor Button */}
+          <div className="w-full sm:w-auto flex flex-row sm:flex-row gap-2 mt-4 sm:mt-0 items-center">
+            <button
+              onClick={() => {
+                setShowDistributorModal(true);
+                setDistributorSearch("");
+                setModalDistributor(null);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-blue-700 font-semibold rounded-lg shadow hover:bg-blue-50 transition"
+            >
+              <Building2 className="w-5 h-5" />
+              Select Distributor
+            </button>
+             {/* Stock Filter Buttons - show on right of distributor button on mobile */}
+            <div className="flex-1 flex gap-2 sm:hidden">
+              <button
+                onClick={() => setFilterType("all")}
+                className={`w-full px-0 py-2 rounded font-medium text-sm transition-colors ${
+                  filterType === "all"
+                    ? "bg-sky-500 text-white shadow"
+                    : "bg-gray-100 text-gray-700 hover:bg-sky-100"
+                }`}
+              >
+                All Items
+              </button>
+              <button
+                onClick={() => setFilterType("low-stock")}
+                className={`w-full px-0 py-2 rounded font-medium text-sm transition-colors ${
+                  filterType === "low-stock"
+                    ? "bg-yellow-500 text-white shadow"
+                    : "bg-gray-100 text-gray-700 hover:bg-sky-100"
+                }`}
+              >
+                Low Stock
+              </button>
+              <button
+                onClick={() => setFilterType("out-of-stock")}
+                className={`w-full px-0 py-2 rounded font-medium text-sm transition-colors ${
+                  filterType === "out-of-stock"
+                    ? "bg-red-500 text-white shadow"
+                    : "bg-gray-100 text-gray-700 hover:bg-sky-100"
+                }`}
+              >
+                Out of Stock
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-
-    {/* Right: Select Distributor + Filter Buttons (mobile) */}
-    <div className="w-full sm:w-auto flex flex-row sm:flex-row gap-2 mt-4 sm:mt-0 items-center md:pb-4 md:pr-16 ">
-      <button
-        onClick={() => {
-          setShowDistributorModal(true);
-          setDistributorSearch("");
-          setModalDistributor(null);
-        }}
-        className="flex items-center gap-2 px-4 py-2 bg-black text-white font-semibold rounded-full shadow hover:bg-gray-900 transition md:py-4"
-      >
-        <Building2 className="w-5 h-5" />
-        Select Distributor
-      </button>
-
-      {/* Stock Filter Buttons (mobile only) */}
-      <div className="flex-1 flex gap-2 sm:hidden">
-        {[
-          { key: "all", label: "All Items", color: "bg-sky-500" },
-          { key: "low-stock", label: "Low Stock", color: "bg-yellow-500" },
-          { key: "out-of-stock", label: "Out of Stock", color: "bg-red-500" }
-        ].map(({ key, label, color }) => (
-          <button
-            key={key}
-            onClick={() => setFilterType(key)}
-            className={`w-full px-0 py-2 rounded-full font-medium text-sm transition-colors ${
-              filterType === key
-                ? `${color} text-white shadow`
-                : "bg-gray-100 text-gray-700 hover:bg-sky-100"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-</div>
-
 
       {/* Category Tabs Bar */}
-      <div className="relative z-30 y-auto  w-full">
-        <div className="w-full flex items-stretch relative bg-white md:pl-16 md:pr-16 ">
+      <div className="relative z-30 y-auto">
+        <div className="w-full flex items-stretch relative bg-white border-b shadow-sm">
           {/* Tabs */}
-          <div className="flex overflow-x-auto w-full overflow-y-hidden scrollbar-hide flex-1 relative z-10 y-auto bg-white ">
+          <div className="flex overflow-x-auto overflow-y-hidden scrollbar-hide flex-1 relative z-10 y-auto">
             {Object.keys(categoryStructure).map((cat) => (
               <button
                 key={cat}
@@ -829,16 +829,18 @@ const addAllToCart = () => {
                   setActiveSubcategory(null);
                   setViewMode("categories");
                 }}
-                className={`relative px-6 py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors
+                className={`relative px-6 py-3 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors
                   ${activeCategory === cat
-                    ? "bg-black text-white shadow-lg rounded-full"
-                    : "text-gray-700 hover:text-black"}
+                    ? "bg-black-600 text-white shadow-lg rounded-t-md rounded-b-none z-20"
+                    : "text-gray-700 hover:text-sky-700"}
                   `}
                 style={{
                   outline: "none",
                   border: "none",
-                  background: activeCategory === cat ? "black" : "transparent",
-                  
+                  background: activeCategory === cat ? "linear-gradient(90deg, #0096FF 0%, #0F52BA 100%)" : "transparent",
+                  zIndex: activeCategory === cat ? 20 : 10,
+                  marginTop: activeCategory === cat ? "-6px" : "0",
+                  marginBottom: activeCategory === cat ? "-3px" : "0"
                 }}
               >
                 {cat}
@@ -849,9 +851,9 @@ const addAllToCart = () => {
           <div className="hidden sm:flex items-center gap-2 px-3 py-2 flex-shrink-0 bg-white border-l relative z-10">
             <button
               onClick={() => setFilterType("all")}
-              className={`px-3 py-3 rounded-full font-medium transition-colors ${
+              className={`px-3 py-1 rounded font-medium transition-colors ${
                 filterType === "all"
-                  ? "bg-blue-700 text-white shadow"
+                  ? "bg-sky-500 text-white shadow"
                   : "bg-gray-100 text-gray-700 hover:bg-sky-100"
               }`}
             >
@@ -859,7 +861,7 @@ const addAllToCart = () => {
             </button>
             <button
               onClick={() => setFilterType("low-stock")}
-              className={`px-3 py-3 rounded-full font-medium transition-colors ${
+              className={`px-3 py-1 rounded font-medium transition-colors ${
                 filterType === "low-stock"
                   ? "bg-yellow-500 text-white shadow"
                   : "bg-gray-100 text-gray-700 hover:bg-sky-100"
@@ -870,7 +872,7 @@ const addAllToCart = () => {
             </button>
             <button
               onClick={() => setFilterType("out-of-stock")}
-              className={`px-3 py-3 rounded-full font-medium transition-colors ${
+              className={`px-3 py-1 rounded font-medium transition-colors ${
                 filterType === "out-of-stock"
                   ? "bg-red-500 text-white shadow"
                   : "bg-gray-100 text-gray-700 hover:bg-sky-100"
@@ -880,32 +882,42 @@ const addAllToCart = () => {
             </button>
           </div>
         </div>
+        {/* Blue highlight covers below the selected tab */}
+        <div
+          className="w-full transition-all duration-300"
+          style={{
+            background: "#F0FFFF",
+            minHeight: "0rem",
+            height: "0rem"
+          }}
+        />
       </div>
 
       {/* Main Content: Subcategories + Products */}
       <div
-        className="flex w-full px-0 sm:px-6 py-4 sm:py-8 gap-2 sm:gap-6 rounded-3xl"
+        className="flex w-full px-0 sm:px-6 py-4 sm:py-8 gap-2 sm:gap-6"
         style={{
-          background: activeCategory ? "#FFFFFF" : undefined,
+          background: activeCategory ? "##F0FFFF" : undefined,
           transition: "background 0.3s"
         }}
       >
         {/* Subcategory Area */}
         <div
-          className="flex-shrink-0 md:pl-8"
+          className="flex-shrink-0"
           style={{
-            width: "220px",
+            width: "140px",
             minWidth: "100px",
-            maxWidth: "220px"
+            maxWidth: "180px"
           }}
         >
-          <div className="bg-white rounded-3xl shadow-sm border-2 p-4 sticky top-[120px] mb-4">
+          <div className="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-4 sticky top-[120px] mb-4">
+            <h3 className="text-lg font-bold text-blue-900 mb-3">Subcategories</h3>
             <div className="flex flex-col gap-2">
               {Object.keys(categoryStructure[activeCategory] || {}).map(subcat => (
                 <button
                   key={subcat}
                   onClick={() => handleSubcategoryClick(subcat)}
-                  className={`font-eudoxus  px-3 py-2 rounded-full gap-2 font-medium transition-colors ${
+                  className={`text-left px-3 py-2 rounded-lg font-medium transition-colors ${
                     activeSubcategory === subcat
                       ? "bg-blue-900 text-white border-blue-700 shadow"
                       : "bg-blue-50 text-blue-900 border-blue-100 hover:bg-blue-100"
@@ -922,8 +934,8 @@ const addAllToCart = () => {
           </div>
         </div>
         {/* Product Area */}
-        <div className="flex-1 min-w-0  md:pr-16 ">
-          <div className="bg-white rounded-3xl shadow-sm border-2 border-gray-200 p-4 sticky top-[120px] mb-4">
+        <div className="flex-1 min-w-0">
+          <div className="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-4 sticky top-[120px] mb-4">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
