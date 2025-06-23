@@ -14,6 +14,6 @@ router.post('/register', registerDistributor);
 router.post('/login', loginDistributor);
 
 // Protected Route - Distributor only
-router.get('/profile', authenticate, authorize('distributor'), getDistributorProfile);
+router.get('/profile', authenticate, getDistributorProfile);
 
 export default router;

@@ -6,22 +6,11 @@ const OrderItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
-  variantId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
-  },
-  productName: {
+  sku: {
     type: String,
     required: true
   },
-  variantName: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
+
   quantity: {
     type: Number,
     required: true,
@@ -77,4 +66,8 @@ OrderSchema.pre('save', async function(next) {
   next();
 });
 
+// Add indexing for faster queries
+OrderSchema.index({ retailerId: 1, status: 1, createdAt: -1 });
+OrderSchema.index({ distributorId: 1, status: 1, createdAt: -1 });
+OrderSchema.index({ orderNumber: 1 }, { unique: true });
 module.exports = mongoose.model('Order', OrderSchema);

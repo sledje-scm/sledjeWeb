@@ -71,6 +71,10 @@ export const loginRetailer = async (req, res) => {
         phone: retailer.phone,
         email: retailer.email,
         role: retailer.role,
+        pincode: retailer.pincode,
+        location: retailer.location,
+        gstNumber: retailer.gstNumber,
+        businessType: retailer.businessType,
         token: generateToken(retailer._id),
       });
     } else {

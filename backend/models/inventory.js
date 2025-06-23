@@ -15,6 +15,11 @@ const InventorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     required: true 
   },
+  sku: { 
+    type: String, 
+    required: true, 
+    unique: true 
+  },
   stock: { 
     type: Number, 
     required: true, 
