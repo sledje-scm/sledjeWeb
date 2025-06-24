@@ -1,6 +1,6 @@
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import Retailer from '../models/Retailer.js';
-import Distributor from '../models/Distributor.js';
+import Distributor from '../models/distributor.js';
 import mongoose from 'mongoose';
 
 // @desc    Send connection request from retailer to distributor
