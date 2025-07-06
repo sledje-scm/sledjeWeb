@@ -30,7 +30,7 @@ const OrderItemSchema = new mongoose.Schema({
 const OrderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
-    required: true,
+    required: false,
     unique: true
   },
   retailerId: { type: mongoose.Schema.Types.ObjectId, ref: "Retailer" },
@@ -55,9 +55,10 @@ const OrderSchema = new mongoose.Schema({
 // Generate order number before saving
 OrderSchema.pre('save', async function(next) {
   if (!this.orderNumber) {
+    console.log("Generating order number...");
     // Generate a unique order number based on date and a random number
     const date = new Date();
-    const year = date.getFullYear().toString().substr(-2);
+    const year = date.getFullYear().toString().slice(-2);
     const month = ('0' + (date.getMonth() + 1)).slice(-2);
     const day = ('0' + date.getDate()).slice(-2);
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -70,4 +71,4 @@ OrderSchema.pre('save', async function(next) {
 OrderSchema.index({ retailerId: 1, status: 1, createdAt: -1 });
 OrderSchema.index({ distributorId: 1, status: 1, createdAt: -1 });
 OrderSchema.index({ orderNumber: 1 }, { unique: true });
-module.exports = mongoose.model('Order', OrderSchema);
+export default mongoose.model('Order', OrderSchema);

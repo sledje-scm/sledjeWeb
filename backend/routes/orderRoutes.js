@@ -9,74 +9,88 @@ import {
   getOrderStatusUpdates,
   cancelOrder,
   getNotifications,
-  markNotificationRead
+  markNotificationRead,
+  updateOrderStatus,
+  modifyPendingOrder
 } from '../controllers/orderController.js';
-import retailerMiddleware from '../middleware/retailerMiddleware.js';
-import distributorMiddleware from '../middleware/distributorMiddleware.js';
+import {
+  authenticate as authenticateRetailer,
+  authorize as authorizeRetailer
+} from '../middleware/retailerMiddleware.js';
 
+import {
+  authenticate as authenticateDistributor,
+  authorize as authorizeDistributor
+} from '../middleware/distributorMiddleware.js';
 const router = express.Router();
 
 // ===== RETAILER ROUTES =====
 
 // Create new order request
 router.post('/create', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   createOrderRequest
 );
 
 // Get retailer's orders (all stages visible)
 router.get('/retailer/orders', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   getOrdersList
 );
 
 // Get specific order details (retailer can see all stages)
 router.get('/retailer/orders/:orderId', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   getOrderDetails
 );
 
 // Get order history/timeline for tracking
 router.get('/retailer/orders/:orderId/history', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   getOrderHistory
 );
 
 // Approve/reject modified order
 router.put('/retailer/orders/:orderId/approve', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   approveModifiedOrder
 );
 
 // Cancel order (only if pending)
 router.put('/retailer/orders/:orderId/cancel', 
-  retailerMiddleware, 
+  authenticateRetailer, 
   cancelOrder
+);
+
+// Modify pending order
+router.put('/retailer/orders/:orderId/modify', 
+  authenticateRetailer, 
+  modifyPendingOrder
 );
 
 // ===== DISTRIBUTOR ROUTES =====
 
 // Get distributor's pending orders
-router.get('/distributor/orders', 
-  distributorMiddleware, 
+router.get('/distributor/order', 
+  authenticateDistributor, 
   getOrdersList
 );
 
 // Get specific order details for processing
 router.get('/distributor/orders/:orderId', 
-  distributorMiddleware, 
+  authenticateDistributor, 
   getOrderDetails
 );
 
 // Process order (accept/reject/modify)
 router.put('/distributor/orders/:orderId/process', 
-  distributorMiddleware, 
+  authenticateDistributor, 
   processOrderRequest
 );
 
 // Update order status (processing -> completed)
 router.put('/distributor/orders/:orderId/status', 
-  distributorMiddleware, 
+  authenticateDistributor, 
   updateOrderStatus
 );
 
@@ -84,19 +98,19 @@ router.put('/distributor/orders/:orderId/status',
 
 // Get notifications for both retailers and distributors
 router.get('/notifications', 
-  authMiddleware, 
+  
   getNotifications
 );
 
 // Mark notification as read
 router.put('/notifications/:notificationId/read', 
-  authMiddleware, 
+ 
   markNotificationRead
 );
 
 // Get real-time order status updates
 router.get('/orders/:orderId/status', 
-  authMiddleware, 
+  
   getOrderStatusUpdates
 );
 

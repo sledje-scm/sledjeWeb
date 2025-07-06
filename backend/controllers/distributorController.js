@@ -1,4 +1,4 @@
-import Distributor from '../models/distributor.js';
+import Distributor from '../models/Distributor.js';
 import generateToken from '../utils/generateToken.js';
 
 /**
@@ -117,3 +117,16 @@ export const getDistributorProfile = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+export const getDistributorByIds = async (req, res) => {
+  const { ids } = req.body;
+
+  try {
+    const distributors = await Distributor.find({ _id: { $in: ids } })
+      .select('_id companyName ownerName phone email gstNumber businessType pincode location address');
+
+    res.json({ distributors });
+  } catch (error) {
+    console.error('❌ Error fetching distributors by IDs:', error.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+}

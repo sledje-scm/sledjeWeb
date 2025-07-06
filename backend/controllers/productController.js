@@ -1,4 +1,5 @@
 import e from 'express';
+import Retailer from '../models/Retailer.js';
 import Product from '../models/Product.js';
 
 /**
@@ -27,8 +28,7 @@ export const addProduct = async (req, res) => {
   } catch (error) {
     console.error('❌ Error adding product:', error.message);
     console.error(error);
-    console
-    console.log('lag g');
+
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -118,6 +118,28 @@ export const getProducts = async (req, res) => {
     res.status(200).json(products);
   } catch (error) {
     console.error("❌ Error fetching products:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+/**
+ * Get products for all connected distributors of a retailer
+ * GET /api/products/connected-distributors
+ */
+export const getProductsForConnectedDistributors = async (req, res) => {
+  try {
+    // Assuming req.user._id is the retailer's ID (from auth middleware)
+    const retailer = await Retailer.findById(req.user._id);
+    if (!retailer || !retailer.distributors || retailer.distributors.length === 0) {
+      return res.json({ products: [] });
+    }
+    // Fetch products for those distributors
+    const products = await Product.find({
+      distributorId: { $in: retailer.distributors }
+    }).lean();
+    res.json({ products });
+  } catch (error) {
+    console.error("❌ Error fetching connected distributors' products:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 };

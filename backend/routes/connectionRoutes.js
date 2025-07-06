@@ -28,7 +28,7 @@ const router = express.Router();
 // Retailer routes
 router.post('/request', authenticateRetailer, sendConnectionRequest);
 router.get('/retailer/requests', authenticateRetailer, authorizeRetailer, getRetailerRequests);
-router.get('/retailer/distributors', authenticateRetailer, authorizeRetailer, getConnectedDistributors);
+router.get('/retailer/distributors', authenticateRetailer, getConnectedDistributors);
 router.get('/search/distributors', authenticateRetailer, authorizeRetailer, searchDistributors);
 router.delete('/remove/:distributorId', authenticateRetailer, authorizeRetailer, removeConnection);
 router.get('/suggestions', authenticateRetailer, getSuggestedDistributors);

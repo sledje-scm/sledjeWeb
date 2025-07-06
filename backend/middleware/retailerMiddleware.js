@@ -30,6 +30,7 @@ export const authenticate = async (req, res, next) => {
     
     // Add retailer to request object
     req.user = retailer;
+    req.user.role = 'retailer'; // Set role for authorization checks
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

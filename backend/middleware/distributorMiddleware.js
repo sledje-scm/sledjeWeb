@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Distributor from '../models/distributor.js';
+import Distributor from '../models/Distributor.js';
 
 /**
  * Authentication middleware for verifying JWT tokens
@@ -30,6 +30,7 @@ export const authenticate = async (req, res, next) => {
     
     // Add distributor to request object
     req.user = distributor;
+    req.user.role = 'distributor'; // Set role for authorization checks
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

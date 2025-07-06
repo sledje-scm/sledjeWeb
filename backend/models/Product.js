@@ -29,6 +29,14 @@ const VariantSchema = new mongoose.Schema({
     type: String, 
     required: true, 
     unique: true 
+  },
+  description: { 
+    type: String, 
+    default: 'No description provided' 
+  },
+  image: { 
+    type: String, 
+    default: 'https://via.placeholder.com/150' 
   }
 });
 

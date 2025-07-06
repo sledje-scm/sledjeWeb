@@ -4,8 +4,10 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  getProductsForConnectedDistributors
 } from '../controllers/productController.js';
 import { authenticate, authorize } from '../middleware/distributorMiddleware.js';
+import { authenticate as authenticateRetailer } from '../middleware/retailerMiddleware.js';
 
 
 const router = express.Router();
@@ -21,6 +23,9 @@ router.put('/:productId', authenticate,updateProduct);
 
 // Delete a product
 router.delete('/:productId', authenticate,  deleteProduct);
+
+
+router.get('/connected-distributors', authenticateRetailer, getProductsForConnectedDistributors);
 
 export default router;
 // ```

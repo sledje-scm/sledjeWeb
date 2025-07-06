@@ -1,6 +1,8 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Notification from '../models/Notification.js'; // Assuming you have this
+import Retailer from '../models/Retailer.js';
+import Distributor from '../models/Distributor.js';
 
 // RETAILER SIDE - Create and Send Order
 export const createOrderRequest = async (req, res) => {
@@ -13,8 +15,10 @@ export const createOrderRequest = async (req, res) => {
     
     // Calculate total with current prices (might change before acceptance)
     const estimatedTotal = await calculateEstimatedTotal(validatedItems);
+  
 
     const order = new Order({
+
       retailerId,
       distributorId,
       items: validatedItems,
@@ -22,6 +26,7 @@ export const createOrderRequest = async (req, res) => {
       status: 'pending', // Waiting for distributor acceptance
       notes
     });
+    
 
     await order.save();
 
@@ -190,6 +195,7 @@ export const processOrderRequest = async (req, res) => {
 };
 
 // RETAILER SIDE - Approve Modified Order
+
 export const approveModifiedOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -241,6 +247,54 @@ export const approveModifiedOrder = async (req, res) => {
       data: { orderId: order._id, status: order.status }
     });
 
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// MODIFY PENDING ORDER (RETAILER ONLY)
+export const modifyPendingOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const retailerId = req.user.id;
+    const { items, notes } = req.body;
+
+    const order = await Order.findOne({
+      _id: orderId,
+      retailerId,
+      status: 'pending'
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found or cannot be modified'
+      });
+    }
+
+    // Validate new items (reuse your validateSkusOnly)
+    const validatedItems = await validateSkusOnly(items, order.distributorId);
+
+    order.items = validatedItems;
+    order.notes = notes || order.notes;
+    order.totalAmount = await calculateEstimatedTotal(validatedItems);
+
+    await order.save();
+
+    res.json({
+      success: true,
+      message: 'Order modified successfully',
+      data: {
+        orderId: order._id,
+        status: order.status,
+        items: order.items,
+        notes: order.notes,
+        totalAmount: order.totalAmount
+      }
+    });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -369,37 +423,59 @@ const createNotification = async ({ recipientId, recipientType, type, orderId, m
 // GET ORDERS (with minimal data for lists)
 export const getOrdersList = async (req, res) => {
   try {
-    const { status, role } = req.query; // role: 'retailer' | 'distributor'
+    const role = req.user.role;
+    const { status } = req.query;
     const userId = req.user.id;
-    
+
     let filter = {};
     if (role === 'retailer') {
       filter.retailerId = userId;
     } else {
       filter.distributorId = userId;
     }
-    
+
     if (status) filter.status = status;
 
-    // Return minimal data for list view
     const orders = await Order.find(filter)
-      .select('orderNumber status totalAmount createdAt items.length')
+      .select('orderNumber status totalAmount createdAt items')
+      .populate('retailerId', 'businessName phone email pincode')
+      .populate('distributorId', 'ownerName phone email pincode')
       .sort({ createdAt: -1 })
       .limit(50);
 
-    res.json({
-      success: true,
-      data: orders.map(order => ({
+    const responseData = orders.map(order => {
+      const base = {
         id: order._id,
         orderNumber: order.orderNumber,
         status: order.status,
         totalAmount: order.totalAmount,
         itemCount: order.items.length,
-        createdAt: order.createdAt
-      }))
+        createdAt: order.createdAt,
+      };
+
+      if (role === 'distributor') {
+        return {
+          ...base,
+          retailer: order.retailerId ? {
+            id: order.retailerId._id,
+            name: order.retailerId.ownerName,
+          } : null
+        };
+      } else {
+        return {
+          ...base,
+          distributor: order.distributorId ? {
+            id: order.distributorId._id,
+            name: order.distributorId.ownerName,
+          } : null
+        };
+      }
     });
 
+    res.json({ success: true, data: responseData });
+
   } catch (error) {
+    console.error("Error fetching order list:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -407,18 +483,20 @@ export const getOrdersList = async (req, res) => {
   }
 };
 
+
 // GET SINGLE ORDER (full details only when needed)
 export const getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
-    
+
+    // Find the order and populate retailer/distributor info
     const order = await Order.findOne({
       _id: orderId,
       $or: [{ retailerId: userId }, { distributorId: userId }]
     })
-    .populate('retailerId', 'name email phone')
-    .populate('distributorId', 'name email phone');
+      .populate('retailerId', 'businessName phone email pincode address')
+      .populate('distributorId', 'companyName ownerName phone email gstNumber businessType pincode location address');
 
     if (!order) {
       return res.status(404).json({
@@ -427,9 +505,65 @@ export const getOrderDetails = async (req, res) => {
       });
     }
 
+    // --- Populate product and variant info for each item ---
+    // We'll fetch all products for the items in the order
+    const skus = order.items.map(item => item.sku);
+    const products = await Product.find({ 'variants.sku': { $in: skus } });
+
+    // Build a SKU -> {product, variant} map for fast lookup
+    const skuMap = {};
+    products.forEach(product => {
+      product.variants.forEach(variant => {
+        if (skus.includes(variant.sku)) {
+          skuMap[variant.sku] = {
+            productId: product._id,
+            productName: product.name,
+            productCategory: product.category,
+            productIcon: product.icon,
+            variantId: variant.id,
+            variantName: variant.name,
+            variantSku: variant.sku,
+            variantImage: variant.image,
+            variantDescription: variant.description,
+            variantExpiry: variant.expiry,
+            variantSellingPrice: variant.sellingPrice,
+            variantCostPrice: variant.costPrice,
+            variantStock: variant.stock
+          };
+        }
+      });
+    });
+
+    // Attach product/variant info to each order item
+    const itemsWithProductInfo = order.items.map(item => ({
+      ...item.toObject(),
+      ...skuMap[item.sku]
+    }));
+
+    // Optionally fetch order history/timeline if you want it in modal
+    const notifications = await Notification.find({ orderId })
+      .sort({ createdAt: 1 })
+      .select('type message createdAt data');
+
+    // Compose response object
+    const orderObj = order.toObject();
+    orderObj.retailer = orderObj.retailerId;
+    orderObj.distributor = orderObj.distributorId;
+    orderObj.items = itemsWithProductInfo;
+    delete orderObj.retailerId;
+    delete orderObj.distributorId;
+
+    // Add order history/timeline if needed
+    orderObj.orderHistory = notifications.map(n => ({
+      type: n.type,
+      message: n.message,
+      date: n.createdAt,
+      data: n.data
+    }));
+
     res.json({
       success: true,
-      data: order
+      data: orderObj
     });
 
   } catch (error) {
