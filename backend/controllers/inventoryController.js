@@ -9,7 +9,9 @@ export const getInventory = async (req, res) => {
     // Fetch inventory for the logged-in retailer
     const inventory = await Inventory.find({ retailerId: req.user._id }).populate({
       path: 'productId',
-      populate: { path: 'distributorId' }
+      populate: { path: 'distributorId' ,
+        select: 'ownerName email phone companyName _id' 
+      }
     });
 
     // Map inventory data to the required structure
@@ -21,7 +23,7 @@ export const getInventory = async (req, res) => {
         id: product.id,
         name: product.name,
         icon: product.icon,
-        distributorId: product.distributorId,
+        distributorId: product.distributorId._id, // Assuming distributorId is an ObjectId
         distributor: product.distributorId.ownerName, // Assuming distributor name is populated
         category: product.category,
         subcategory: product.category,
