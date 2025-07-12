@@ -1,211 +1,597 @@
-import React, { useState } from "react";
-import { Check, X, SendHorizonal, CircleCheck, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { 
+  ShoppingCart, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  Eye,
+  Filter,
+  Search,
+  Bell,
+  Package,
+  Calendar,
+  DollarSign,
+  User,
+  Phone,
+  Mail,
+  Edit3,
+  Truck,
+  ArrowRight,
+  Check,
+  X,
+  FileText,
+  Building
+} from 'lucide-react';
+import API from "../../api"; // Adjust path as needed
 
-const DistributorOrders = () => {
-  const [activeTab, setActiveTab] = useState("requests");
-  const [orderRequests, setOrderRequests] = useState([
-    {
-      id: 1,
-      retailer: "FreshMart",
-      items: [
-        { name: "Aashirvaad Atta", quantity: 10, rate: 300 },
-        { name: "Tata Salt", quantity: 5, rate: 20 },
-      ],
-    },
-    {
-      id: 2,
-      retailer: "Kirana Plus",
-      items: [{ name: "Fortune Oil", quantity: 4, rate: 160 }],
-    },
-  ]);
-  const [acceptedOrders, setAcceptedOrders] = useState([]);
-  const [onWayOrders, setOnWayOrders] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+const DistributorOrderManagement = () => {
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [activeTab, setActiveTab] = useState('pending');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [actionType, setActionType] = useState(''); // 'accept', 'reject', 'modify'
+  const [loading, setLoading] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [modifications, setModifications] = useState([]);
 
-  const acceptOrder = (orderId) => {
-    const accepted = orderRequests.find((order) => order.id === orderId);
-    setAcceptedOrders((prev) => [...prev, accepted]);
-    setOrderRequests((prev) => prev.filter((order) => order.id !== orderId));
+  // Mock data for demonstration
+ 
+    useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const res = await API.get('/orders/distributor/order');
+        setOrders(res.data.data || []);
+      } catch {
+        setOrders([]);
+      }
+      setLoading(false);
+    };
+    fetchOrders();
+  }, []);
+
+
+
+  const getStatusIcon = (status) => {
+    const iconProps = { size: 20 };
+    switch (status) {
+      case 'pending':
+        return <Clock {...iconProps} className="text-yellow-500" />;
+      case 'processing':
+        return <Truck {...iconProps} className="text-blue-500" />;
+      case 'completed':
+        return <CheckCircle {...iconProps} className="text-green-500" />;
+      case 'cancelled':
+        return <XCircle {...iconProps} className="text-red-500" />;
+      default:
+        return <Clock {...iconProps} className="text-gray-500" />;
+    }
   };
 
-  const rejectOrder = (orderId) => {
-    setOrderRequests((prev) => prev.filter((order) => order.id !== orderId));
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
-  const sendOrder = (retailer) => {
-    const sending = acceptedOrders.filter((order) => order.retailer === retailer);
-    setOnWayOrders((prev) => [...prev, ...sending]);
-    setAcceptedOrders((prev) => prev.filter((order) => order.retailer !== retailer));
-    setShowModal(true);
+  const getUrgencyLevel = (createdAt) => {
+    const hoursSinceCreated = (new Date() - new Date(createdAt)) / (1000 * 60 * 60);
+    if (hoursSinceCreated > 24) return 'high';
+    if (hoursSinceCreated > 12) return 'medium';
+    return 'low';
+  };
+  
+  
+  const filteredOrders = orders.filter(order => {
+    const orderNumber = order.orderNumber || "";
+    const retailerName = (order.retailer && order.retailer.name) ? order.retailer.name : "";
+    const matchesSearch =
+      orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      retailerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'all' || order.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+ const handleOrderAction = async (order, action) => {
+  setLoading(true);
+  try {
+    const res = await API.get(`/orders/distributor/orders/${order.id}`);
+    setSelectedOrder(res.data.data);
+    setActionType(action);
+    setShowOrderModal(true);
+  } catch (error) {
+    alert("Failed to fetch order details");
+  }
+  setLoading(false);
+};
+
+    const processOrder = async () => {
+    setLoading(true);
+    try {
+      if (actionType === 'accept') {
+        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'accept' });
+      } else if (actionType === 'reject') {
+        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'reject', rejectionReason });
+      } else if (actionType === 'modify') {
+        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'modify', modifications });
+      } else if (actionType === 'complete') {
+        await API.put(`orders/distributor/orders/${selectedOrder.id}/status`, { status: 'completed' });
+      }
+      // Refresh orders after action
+      const res = await API.get('orders/distributor/orders');
+      setOrders(res.data.data || []);
+      setShowOrderModal(false);
+      setRejectionReason('');
+    } catch (error) {
+      alert(error.response?.data?.message || "Action failed");
+    }
+    setLoading(false);
+  };
+  
+
+  const OrderCard = ({ order }) => {
+    const urgency = getUrgencyLevel(order.createdAt);
+    
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-indigo-50 rounded-lg">
+              <ShoppingCart className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{order.retailer.name}</h3>
+              <p className="text-sm text-gray-500">{order.orderNumber}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {urgency === 'high' && (
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" title="Urgent" />
+            )}
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
+              {getStatusIcon(order.status)}
+              <span className="capitalize">{order.status}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center space-x-2">
+            <Package className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-600">{order.itemCount} items</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <DollarSign className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-600">₹{order.totalAmount.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Building className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Retailer Info</span>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <User className="w-3 h-3 text-gray-400" />
+              <span className="text-xs text-gray-600">{order.retailer.name}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Phone className="w-3 h-3 text-gray-400" />
+              <span className="text-xs text-gray-600">{order.retailer.phone}</span>
+            </div>
+          </div>
+        </div>
+
+        {order.notes && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="flex items-start space-x-2">
+              <FileText className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-sm font-medium text-blue-800">Order Notes:</span>
+                <p className="text-sm text-blue-700 mt-1">{order.notes}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            {new Date(order.createdAt).toLocaleString()}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleOrderAction(order, 'view')}
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+              <span>View</span>
+            </button>
+            {order.status === 'pending' && (
+              <>
+                <button
+                  onClick={() => handleOrderAction(order, 'accept')}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Accept</span>
+                </button>
+                <button
+                  onClick={() => handleOrderAction(order, 'reject')}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Reject</span>
+                </button>
+                <button
+                  onClick={() => handleOrderAction(order, 'modify')}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Modify</span>
+                </button>
+              </>
+            )}
+            {order.status === 'processing' && (
+              <button
+                onClick={() => handleOrderAction(order, 'complete')}
+                className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <Truck className="w-4 h-4" />
+                <span>Mark Complete</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setActiveTab("requests");
-  };
+  const OrderModal = () => {
+    if (!selectedOrder) return null;
 
-  const TabButton = ({ tabId, label }) => (
-    <button
-      onClick={() => setActiveTab(tabId)}
-      className={`text-center px-4 py-2 font-medium transition relative ${
-        activeTab === tabId ? "text-blue-800 font-semibold" : "text-gray-600"
-      }`}
-    >
-      {label}
-      <div
-        className={`absolute bottom-0 left-0 right-0 h-1 ${
-          activeTab === tabId ? "bg-blue-600" : "bg-transparent"
-        }`}
-      />
-    </button>
-  );
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {actionType === 'view' ? 'Order Details' : 
+                 actionType === 'accept' ? 'Accept Order' :
+                 actionType === 'reject' ? 'Reject Order' :
+                 actionType === 'modify' ? 'Modify Order' : 'Complete Order'}
+              </h2>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            {/* Order Header */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Order Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Order Number:</span>
+                      <span className="text-sm font-medium text-gray-900">{selectedOrder.orderNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                        {selectedOrder.status}
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Total Amount:</span>
+                      <span className="text-sm font-medium text-gray-900">₹{selectedOrder.totalAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Created:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {new Date(selectedOrder.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Retailer Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{selectedOrder.retailer.businessName}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{selectedOrder.retailer.email}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">{selectedOrder.retailer.phone}</span>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <Building className="w-4 h-4 text-gray-400 mt-0.5" />
+                      <span className="text-sm text-gray-600">{selectedOrder.retailer.pincode}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  const groupedByRetailer = (orders) => {
-    return orders.reduce((acc, order) => {
-      acc[order.retailer] = acc[order.retailer] || [];
-      acc[order.retailer].push(order);
-      return acc;
-    }, {});
+            {/* Order Items */}
+            <div className="mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Order Items</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Product</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">SKU</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-700">Quantity</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-700">Price</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-700">Stock</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-700">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedOrder.items.map((item, index) => (
+                      <tr key={index} className="border-b border-gray-100">
+                        <td className="py-3 px-4">
+                          <div>
+                            <div className="font-medium text-gray-900">{item.productName}</div>
+                            <div className="text-sm text-gray-500">per {item.unit}</div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{item.sku}</td>
+                        <td className="py-3 px-4 text-right">
+                          {actionType === 'modify' ? (
+                            <input
+                              type="number"
+                              defaultValue={item.quantity}
+                              className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                            />
+                          ) : (
+                            <span className="font-medium">{item.quantity}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right">₹{item.price}</td>
+                        <td className="py-3 px-4 text-right">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            item.stock < item.quantity ? 'bg-red-100 text-red-800' : 
+                            item.stock < item.quantity * 2 ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {item.stock} available
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-medium">₹{(item.quantity * item.price).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {selectedOrder.notes && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-900 mb-2">Order Notes</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">{selectedOrder.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Action-specific content */}
+            {actionType === 'reject' && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rejection Reason <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  rows="3"
+                  placeholder="Please provide a reason for rejecting this order..."
+                />
+              </div>
+            )}
+
+            {actionType === 'modify' && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-900 mb-2">Modification Notes</h3>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  rows="3"
+                  placeholder="Explain the modifications made to this order..."
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {actionType !== 'view' && (
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowOrderModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={processOrder}
+                  disabled={loading || (actionType === 'reject' && !rejectionReason.trim())}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors flex items-center justify-center space-x-2 ${
+                    actionType === 'accept' ? 'bg-green-600 hover:bg-green-700' :
+                    actionType === 'reject' ? 'bg-red-600 hover:bg-red-700' :
+                    actionType === 'modify' ? 'bg-orange-600 hover:bg-orange-700' :
+                    'bg-blue-600 hover:bg-blue-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      {actionType === 'accept' && <Check className="w-4 h-4" />}
+                      {actionType === 'reject' && <X className="w-4 h-4" />}
+                      {actionType === 'modify' && <Edit3 className="w-4 h-4" />}
+                      {actionType === 'complete' && <CheckCircle className="w-4 h-4" />}
+                      <span>
+                        {actionType === 'accept' ? 'Accept Order' :
+                         actionType === 'reject' ? 'Reject Order' :
+                         actionType === 'modify' ? 'Save Modifications' :
+                         'Mark as Complete'}
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="bg-white p-6 min-h-screen">
-      {/* Tabs */}
-      <div className="flex gap-6 border-b border-blue-500 mb-6">
-        <TabButton tabId="requests" label="Requests" />
-        <TabButton tabId="accepted" label="Accepted" />
-        <TabButton tabId="onWay" label="On Way" />
-      </div>
-
-      {/* Requests */}
-      {activeTab === "requests" &&
-        (orderRequests.length === 0 ? (
-          <p className="text-center text-gray-400">No new order requests.</p>
-        ) : (
-          orderRequests.map((order) => (
-            <div
-              key={order.id}
-              className="bg-blue-50 rounded-lg p-4 mb-4 shadow-md"
-            >
-              <h3 className="text-xl font-bold text-blue-700">
-                {order.retailer}
-              </h3>
-              <ul className="mt-2">
-                {order.items.map((item, i) => (
-                  <li key={i} className="text-gray-700">
-                    {item.name} - Qty: {item.quantity}, Rate: ₹{item.rate}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex gap-4 mt-4">
-                <button
-                  onClick={() => acceptOrder(order.id)}
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
-                >
-                  <Check size={16} /> Accept
-                </button>
-                <button
-                  onClick={() => rejectOrder(order.id)}
-                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
-                >
-                  <X size={16} /> Reject
-                </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Bell className="w-5 h-5 text-gray-600" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </div>
             </div>
-          ))
-        ))}
-
-      {/* Accepted Orders */}
-      {activeTab === "accepted" &&
-        (acceptedOrders.length === 0 ? (
-          <p className="text-center text-gray-400">No accepted orders.</p>
-        ) : (
-          Object.entries(groupedByRetailer(acceptedOrders)).map(
-            ([retailer, orders], i) => {
-              const total = orders
-                .flatMap((o) => o.items)
-                .reduce((sum, item) => sum + item.quantity * item.rate, 0);
-
-              return (
-                <div
-                  key={i}
-                  className="bg-white shadow-md rounded-xl p-4 mb-6 border"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-xl font-bold text-blue-700">
-                      {retailer}
-                    </h3>
-                    <button
-                      onClick={() => sendOrder(retailer)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 flex items-center gap-2"
-                    >
-                      <SendHorizonal size={16} /> Ship
-                    </button>
-                  </div>
-                  <ul className="space-y-2">
-                    {orders.map((order) =>
-                      order.items.map((item, i) => (
-                        <li key={i} className="text-gray-700">
-                          {item.name} - Qty: {item.quantity}, Rate: ₹{item.rate}
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                  <p className="mt-2 font-semibold text-right text-blue-800">
-                    Total: ₹{total}
-                  </p>
-                </div>
-              );
-            }
-          )
-        ))}
-
-      {/* On Way Orders */}
-      {activeTab === "onWay" &&
-        (onWayOrders.length === 0 ? (
-          <p className="text-center text-gray-400">No orders on the way.</p>
-        ) : (
-          onWayOrders.map((order, i) => (
-            <div key={i} className="bg-blue-100 rounded p-4 mb-4 shadow">
-              <h4 className="text-lg font-semibold text-blue-800">
-                {order.retailer}
-              </h4>
-              <ul className="mt-2 text-gray-700">
-                {order.items.map((item, j) => (
-                  <li key={j}>
-                    {item.name} - Qty: {item.quantity}, Rate: ₹{item.rate}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
-        ))}
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md text-center">
-            <CircleCheck
-              size={48}
-              className="text-green-500 mx-auto mb-4"
-            />
-            <h2 className="text-2xl font-bold text-blue-800 mb-2">
-              Order Dispatched!
-            </h2>
-            <p className="mb-6 text-gray-700">
-              The order has been sent to the retailer successfully.
-            </p>
-            <button
-              onClick={closeModal}
-              className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700"
-            >
-              OK
-            </button>
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters and Search */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+              {['pending', 'processing', 'completed', 'cancelled'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === tab
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Order Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Pending Orders</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'pending').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Truck className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Processing</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'processing').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'completed').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">Revenue Today</p>
+                <p className="text-2xl font-bold text-gray-900">₹{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredOrders.map(order => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+
+        {filteredOrders.length === 0 && (
+          <div className="text-center py-12">
+            <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+            <p className="text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms' : `No ${activeTab} orders at the moment`}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {showOrderModal && <OrderModal />}
     </div>
   );
 };
 
-export default DistributorOrders;
+export default DistributorOrderManagement;

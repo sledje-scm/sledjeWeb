@@ -10,6 +10,7 @@ import Home from "./pages/Landing/Home";
 import RetailerLayout from "./pages/Retailers/retailerLayout";
 import RetailerShop from "./pages/Retailers/retailerShop";
 import RetailerShelf from "./pages/Retailers/retailerShelf";
+import RetailerCart from "./pages/Retailers/retailerCart";
 import RetailerOrders from "./pages/Retailers/retailerOrders";
 import RetailerPayment from "./pages/Retailers/retailerPayment";
 import RetailerYou from "./pages/Retailers/retailerYou";
@@ -79,6 +80,7 @@ function App() {
           <Route index element={<Navigate to="shop" replace />} />
           <Route path="shop" element={<RetailerShop />} />
           <Route path="shelf" element={<RetailerShelf />} />
+          <Route path="cart" element={<RetailerCart />} />
           <Route path="orders" element={<RetailerOrders />} />
           <Route path="payment" element={<RetailerPayment />} />
           <Route path="you" element={<RetailerYou />} />

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { PlaneLanding, Library, BanknoteArrowUp, Landmark, User, ScanBarcode, MoreVertical, LogOut } from "lucide-react";
 import {useAuth} from "../../components/AuthContext.js"; // Import the AuthContext
+import API from "../../api"; // Adjust the import based on your project structure
 
 function TogglingPaymentIcon() {
   const [showFirst, setShowFirst] = useState(true);
@@ -73,14 +74,18 @@ export default function RetailerLayout() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showMobileDropdown]);
   const { logout } = useAuth(); // Import the logout function from AuthContext
-  const handleLogout = () => {
-    // Clear user session or token (if stored in localStorage or cookies)
+  const handleLogout = async () => {
+    // Step 1: Confirm logout
+    if (!window.confirm("Are you sure you want to logout? Unsaved cart items will be sent to backend.")) return;
+
+    // Step 2: Send cart to backend before logout
+   
+
+    // Step 3: Proceed with logout
     localStorage.removeItem("userInfo");
-    logout(); // Call the logout function from AuthContext
+    logout();
     alert("You have been logged out successfully.");
-    // Close dropdown
     setShowMobileDropdown(false);
-    // Redirect to the home page
     navigate("/");
   };
 

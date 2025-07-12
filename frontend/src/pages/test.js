@@ -1,577 +1,706 @@
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import { Trash, Check, FileText, ArrowDown, ArrowUp, PlusCircle, X, Mic, MicOff } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import API from "../../api";
+import {
+  ShoppingCart, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Plus, Filter, Search, Bell,
+  Package, Calendar, DollarSign, ArrowRight, RefreshCw, FileText, X, Check, Edit, Truck,
+  User, Phone, Mail, MapPin, ArrowLeft, Trash2, Save, Download, Upload, MessageSquare,
+  History, Settings, AlertCircle
+} from 'lucide-react';
 
-// We don't need lazy loading since we'll use our own parsing
-const dummyOrders = [
-  {
-    customerName: "Person A",
-    orderId: "ORD123",
-    items: [
-      { id: 1, item: "Product A", brand: "Brand X", quantity: 2, rate: 100 },
-      { id: 2, item: "Product B", brand: "Brand Y", quantity: 1, rate: 150 },
-      { id: 3, item: "Product C", brand: "Brand Z", quantity: 3, rate: 80 },
-      { id: 4, item: "Product D", brand: "Brand X", quantity: 2, rate: 90 },
-      { id: 2, item: "Product B", brand: "Brand Y", quantity: 1, rate: 150 },
-      { id: 3, item: "Product C", brand: "Brand Z", quantity: 3, rate: 80 },
-      { id: 4, item: "Product D", brand: "Brand X", quantity: 2, rate: 90 },
-    ],
-  },
-  {
-    customerName: "Person B",
-    orderId: "ORD456",
-    items: [
-      { id: 5, item: "Product E", brand: "Brand X", quantity: 1, rate: 120 },
-      { id: 6, item: "Product F", brand: "Brand Y", quantity: 2, rate: 70 },
-      { id: 7, item: "Product G", brand: "Brand Z", quantity: 3, rate: 60 },
-      { id: 8, item: "Product H", brand: "Brand X", quantity: 1, rate: 200 },
-    ],
-  },
-];
+const RetailerOrders = () => {
+  const [orders, setOrders] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [selectedOrder, tSelectedOrderse] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showCreateOrder, setShowCreateOrder] = useState(false);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [distributors, setDistributors] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [createOrderData, setCreateOrderData] = useState({
+    distributorId: '',
+    items: [],
+    notes: ''
+  });
+  const [sixDigitCode, setSixDigitCode] = useState('');
+  const [showCodePrompt, setShowCodePrompt] = useState(false);
 
-// Sample product database for order parsing
-const productDatabase = [
-  { item: "Product A", brand: "Brand X", rate: 100 },
-  { item: "Product B", brand: "Brand Y", rate: 150 },
-  { item: "Product C", brand: "Brand Z", rate: 80 },
-  { item: "Product D", brand: "Brand X", rate: 90 },
-  { item: "Product E", brand: "Brand X", rate: 120 },
-  { item: "Product F", brand: "Brand Y", rate: 70 },
-  { item: "Product G", brand: "Brand Z", rate: 60 },
-  { item: "Product H", brand: "Brand X", rate: 200 },
-];
-
-const Shop = () => {
-  const [upcomingOrders, setUpcomingOrders] = useState(dummyOrders);
-  const [paymentOrders, setPaymentOrders] = useState([]);
-  const [expandedCards, setExpandedCards] = useState({});
-  const [showReports, setShowReports] = useState(false);
-  const [completedOrders, setCompletedOrders] = useState([]);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [newOrder, setNewOrder] = useState({ customerName: '', orderId: '', items: [] });
-  const [sortMode, setSortMode] = useState("none");
-  
-  // States for voice input
-  const [transcript, setTranscript] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const [parsedItems, setParsedItems] = useState([]);
-  const recognitionRef = useRef(null);
-
-  // Generate a unique order ID
-  const generateOrderId = () => {
-    const timestamp = new Date().getTime();
-    const randomNum = Math.floor(Math.random() * 1000);
-    return `ORD${timestamp.toString().slice(-4)}${randomNum}`;
-  };
-
-  // Initialize recognition
+  // Fetch orders and notifications from backend
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            setTranscript(prev => prev + ' ' + transcript);
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-      };
-    }
-    
-    // Set default order ID when modal opens
-    if (showOrderModal) {
-      setNewOrder(prev => ({...prev, orderId: generateOrderId()}));
-    }
-    
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [showOrderModal]);
+    fetchOrders();
+    fetchNotifications();
+    fetchDistributors();
+    fetchProducts();
+  }, []);
 
-  const startListening = () => {
-    setTranscript('');
-    if (recognitionRef.current) {
-      recognitionRef.current.start();
-      setIsListening(true);
-    } else {
-      alert('Speech recognition is not supported in this browser.');
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('orders/retailer/orders');
+      setOrders(res.data.data || []);
+      console.log("Fetched orders:", res.data.data);
+    } catch (e) {
+      setOrders([]);
+    }
+    setLoading(false);
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await API.get('/notifications');
+      setNotifications(res.data.data.notifications || []);
+    } catch (e) {
+      setNotifications([]);
     }
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
+  const fetchDistributors = async () => {
+    // Replace with your actual API endpoint for distributors
+    try {
+      const res = await API.get('orders/distributors');
+      setDistributors(res.data.data || []);
+    } catch {
+      setDistributors([]);
     }
   };
 
-  // Use a simple parsing function instead of compromise
-  const parseOrderText = () => {
-    if (!transcript.trim()) {
-      alert("Please enter or speak your order first");
+  const fetchProducts = async () => {
+    // Replace with your actual API endpoint for products
+    try {
+      const res = await API.get('orders/products');
+      setProducts(res.data.data || []);
+    } catch {
+      setProducts([]);
+    }
+  };
+
+  // Create order
+  const handleCreateOrder = async () => {
+    if (!createOrderData.distributorId || createOrderData.items.length === 0) {
+      alert("Please select distributor and add at least one product.");
       return;
     }
-    
-    // Simple regex-based parsing approach
-    const orderText = transcript.toLowerCase();
-    const items = [];
-    
-    // Match patterns like "2 product a" or "three product b"
-    const numberWords = {
-      'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
-      'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+    setLoading(true);
+    try {
+      const res = await API.post('orders/create', createOrderData);
+      setShowCreateOrder(false);
+      setCreateOrderData({ distributorId: '', items: [], notes: '' });
+      fetchOrders();
+      // Show 6-digit code to retailer
+      if (res.data.data && res.data.data.sixDigitCode) {
+        setSixDigitCode(res.data.data.sixDigitCode);
+        setShowCodePrompt(true);
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || "Failed to create order");
+    }
+    setLoading(false);
+  };
+
+  
+
+  // Complete order (distributor enters code, retailer confirms)
+  const handleCompleteOrder = async (orderId) => {
+    const code = prompt("Enter the 6-digit code provided by the distributor to complete the order:");
+    if (!code || code.length !== 6) {
+      alert("Invalid code.");
+      return;
+    }
+    setLoading(true);
+    try {orderId
+      // Backend should verify code and mark order as completed
+      await API.put(`/orders/retailer/orders/${orderId}/complete`, { code });
+      // Update inventory after order is fulfilled
+      await API.post('/inventory/checkout', { orderId });
+      fetchOrders();
+      alert("Order completed and inventory updated!");
+    } catch (e) {
+      alert(e.response?.data?.message || "Failed to complete order");
+    }
+    setLoading(false);
+  };
+
+  // Cancel order
+  const handleCancelOrder = async (orderId, reason) => {
+    if (!reason) return;
+    setLoading(true);
+    try {
+      await API.put(`/orders/retailer/orders/${orderId}/cancel`, { reason });
+      fetchOrders();
+    } catch (e) {
+      alert(e.response?.data?.message || "Failed to cancel order");
+    }
+    setLoading(false);
+  };
+
+  // Approve modified order
+  const handleApproveModifiedOrder = async (orderId, approved) => {
+    setLoading(true);
+    try {
+      await API.put(`/orders/retailer/orders/${orderId}/approve`, { approved });
+      fetchOrders();
+    } catch (e) {
+      alert(e.response?.data?.message || "Failed to update order");
+    }
+    setLoading(false);
+  };
+    // ...inside RetailerOrders component
+  
+  const OrderDetailsModal = () => {
+    if (!selectedOrder) return null;
+
+    // Handler to close modal when clicking outside the modal content
+    const handleOverlayClick = (e) => {
+      if (e.target === e.currentTarget) {
+        setShowOrderDetails(false);
+      }
     };
-    
-    // First convert number words to digits
-    let processedText = orderText;
-    Object.entries(numberWords).forEach(([word, digit]) => {
-      processedText = processedText.replace(new RegExp(`\\b${word}\\b`, 'g'), digit);
-    });
-    
-    // Now search for each product in the text
-    productDatabase.forEach(product => {
-      const productName = product.item.toLowerCase();
-      const productNameWithoutPrefix = productName.replace('product ', '');
-      
-      // Look for patterns like "2 product a" or "2 a"
-      const patterns = [
-        new RegExp(`(\\d+)\\s+${productName}`, 'g'),
-        new RegExp(`(\\d+)\\s+${productNameWithoutPrefix}`, 'g'),
-        new RegExp(`${productName}\\s+(\\d+)`, 'g'),
-        new RegExp(`${productNameWithoutPrefix}\\s+(\\d+)`, 'g')
-      ];
-      
-      patterns.forEach(pattern => {
-        const matches = [...processedText.matchAll(pattern)];
-        matches.forEach(match => {
-          const quantity = parseInt(match[1]) || 1;
-          
-          // Add item if it's not already in the list
-          const existingItem = items.find(item => item.item === product.item);
-          if (existingItem) {
-            existingItem.quantity += quantity;
-          } else {
-            items.push({
-              id: Date.now() + items.length,
-              item: product.item,
-              brand: product.brand,
-              quantity: quantity,
-              rate: product.rate
-            });
-          }
-        });
-      });
-    });
-    
-    // If no specific quantities found, check if products are mentioned at all
-    if (items.length === 0) {
-      productDatabase.forEach(product => {
-        const productName = product.item.toLowerCase();
-        const productNameWithoutPrefix = productName.replace('product ', '');
-        
-        if (
-          processedText.includes(productName) || 
-          processedText.includes(productNameWithoutPrefix)
-        ) {
-          items.push({
-            id: Date.now() + items.length,
-            item: product.item,
-            brand: product.brand,
-            quantity: 1,
-            rate: product.rate
-          });
-        }
-      });
-    }
-    
-    if (items.length === 0) {
-      alert("No products detected in the order. Please try again with product names like 'Product A', 'Product B', etc.");
-    } else {
-      setParsedItems(items);
-    }
-  };
 
-  const toggleExpand = (orderId) => {
-    setExpandedCards((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
-  };
-
-  const moveToPayment = (orderId) => {
-    const order = upcomingOrders.find((o) => o.orderId === orderId);
-    setPaymentOrders((prev) => [...prev, order]);
-    setUpcomingOrders((prev) => prev.filter((o) => o.orderId !== orderId));
-  };
-
-  const deleteOrderCard = (orderId) => {
-    if (window.confirm("Are you sure to delete this order?")) {
-      setUpcomingOrders((prev) => prev.filter((o) => o.orderId !== orderId));
-    }
-  };
-
-  const deleteItem = (orderId, itemId) => {
-    setUpcomingOrders((prev) =>
-      prev.map((o) =>
-        o.orderId === orderId
-          ? { ...o, items: o.items.filter((item) => item.id !== itemId) }
-          : o
-      )
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        onClick={handleOverlayClick}
+      >
+        <div
+          className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          // Prevent click inside modal from closing
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setShowOrderDetails(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-500" />
+                </button>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">{selectedOrder.orderNumber}</h2>
+                  <p className="text-sm text-gray-500">{selectedOrder.distributor?.businessName || selectedOrder.distributorId}</p>
+                </div>
+              </div>
+              <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedOrder.status)}`}>
+                {getStatusIcon(selectedOrder.status)}
+                <span className="capitalize">{selectedOrder.status}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div className="p-6 space-y-6">
+            {/* Order Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Package className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Items</span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{selectedOrder.itemCount || (selectedOrder.items || []).length}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <DollarSign className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Total Amount</span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">₹{selectedOrder.totalAmount?.toLocaleString()}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Calendar className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Order Date</span>
+                </div>
+                <p className="text-lg font-semibold text-gray-900">
+                  {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleDateString() : ""}
+                </p>
+              </div>
+            </div>
+  
+            {/* Modifications Alert */}
+            {selectedOrder.status === 'modified' && (selectedOrder.modifications || []).length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  <h3 className="font-semibold text-orange-800">Order Modifications</h3>
+                </div>
+                <div className="space-y-2">
+                  {(selectedOrder.modifications || []).map((mod, index) => (
+                    <div key={index} className="bg-white rounded p-3">
+                      <p className="text-sm text-gray-900"><strong>{mod.item}:</strong> {mod.reason}</p>
+                      {mod.originalQty && mod.newQty && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          Quantity: {mod.originalQty} → {mod.newQty}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex space-x-3 mt-4">
+                  <button 
+                    onClick={() => handleApproveModifiedOrder(selectedOrder.id, true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Accept Modifications</span>
+                  </button>
+                  <button 
+                    onClick={() => handleApproveModifiedOrder(selectedOrder.id, false)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Reject Order</span>
+                  </button>
+                </div>
+              </div>
+            )}
+  
+            {/* Pending Actions */}
+            {selectedOrder.status === 'pending' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                  <h3 className="font-semibold text-yellow-800">Pending Approval</h3>
+                </div>
+                <p className="text-sm text-yellow-700 mb-4">
+                  This order is waiting for your approval. Review the details and accept or reject.
+                </p>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => handleApproveModifiedOrder(selectedOrder.id, true)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Accept Order</span>
+                  </button>
+                  <button 
+                    onClick={() => handleApproveModifiedOrder(selectedOrder.id, false)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    <span>Reject Order</span>
+                  </button>
+                </div>
+              </div>
+            )}
+  
+            {/* Order Items */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+              <div className="bg-gray-50 rounded-lg overflow-hidden">
+                <table className="min-w-full">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {(selectedOrder.items || []).map(item => (
+                      <tr key={item.id || item.sku} className="bg-white">
+                        <td className="px-4 py-3 text-sm text-gray-900">{item.name || item.productName}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{item.category || item.variantName}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{item.quantity}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">₹{item.price?.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          ₹{(item.quantity * item.price)?.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+  
+            {/* Contact & Shipping Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Distributor Contact</h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-900">{selectedOrder.distributor?.ownerName || '-'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Phone className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-900">{selectedOrder.distributor?.phone || '-'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Mail className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-900">{selectedOrder.distributor?.email || '-'}</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-start space-x-2">
+                    <MapPin className="w-4 h-4 text-gray-600 mt-0.5" />
+                    <div className="text-sm text-gray-900">
+                      <p>{selectedOrder.shippingAddress?.street || '-'}</p>
+                      <p>{selectedOrder.shippingAddress?.city || ''} {selectedOrder.shippingAddress?.state || ''}</p>
+                      <p>{selectedOrder.shippingAddress?.pincode || ''}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            {/* Order History */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Order History</h3>
+              <div className="space-y-3">
+                {(selectedOrder.orderHistory || []).map((entry, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-900">{entry.action}</p>
+                      <p className="text-xs text-gray-500">
+                        {entry.date ? new Date(entry.date).toLocaleString() : ""} • {entry.user}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+  
+            {/* Notes */}
+            {selectedOrder.notes && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-900">{selectedOrder.notes}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 
-  const handlePayment = (orderId, mode) => {
-    const now = new Date();
-    const order = paymentOrders.find((o) => o.orderId === orderId);
-    const bill = {
-      ...order,
-      mode,
-      date: now.toLocaleDateString(),
-      time: now.toLocaleTimeString(),
-    };
-    console.log("Generated Bill:", bill);
-    if (mode === "credit") {
-      alert("Credit bill generated. Redirect to borrower's page...");
-    } else {
-      alert("Paid bill generated.");
+  const getStatusIcon = (status) => {
+    const iconProps = { size: 20 };
+    switch (status) {
+      case 'pending':
+        return <Clock {...iconProps} className="text-yellow-500" />;
+      case 'confirmed':
+        return <CheckCircle {...iconProps} className="text-blue-500" />;
+      case 'shipped':
+        return <Truck {...iconProps} className="text-purple-500" />;
+      case 'delivered':
+        return <Package {...iconProps} className="text-green-500" />;
+      case 'cancelled':
+        return <XCircle {...iconProps} className="text-red-500" />;
+      case 'modified':
+        return <Edit {...iconProps} className="text-orange-500" />;
+      default:
+        return <Clock {...iconProps} className="text-gray-500" />;
     }
-    setPaymentOrders((prev) => prev.filter((o) => o.orderId !== orderId));
-    setCompletedOrders((prev) => [...prev, bill]);
   };
 
-  const calculateTotal = (items) =>
-    items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-
-  const calculateRevenue = () => {
-    return completedOrders.reduce((total, order) => {
-      return total + calculateTotal(order.items);
-    }, 0);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'confirmed':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'delivered':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'modified':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
-  const calculateProfit = () => {
-    return calculateRevenue() * 0.2;
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high':
+        return 'text-red-600 bg-red-100';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'low':
+        return 'text-green-600 bg-green-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
   };
 
-  const sortedUpcomingOrders = [...upcomingOrders].sort((a, b) => {
-    const totalA = calculateTotal(a.items);
-    const totalB = calculateTotal(b.items);
-    if (sortMode === "asc") return totalA - totalB;
-    if (sortMode === "desc") return totalB - totalA;
-    return 0;
-  });
-
-  const renderOrderCard = (order, isPayment = false) => (
-    <div key={order.orderId} className="min-w-[280px] max-w-xs bg-white rounded-lg shadow-md p-4 mx-2">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-md font-bold">{order.customerName || "Custom"}</h2>
-        <Trash
-          className="w-4 h-4 text-red-500 cursor-pointer"
-          onClick={() => deleteOrderCard(order.orderId)}
-        />
-      </div>
-      <div>
-        {(expandedCards[order.orderId] ? order.items : order.items.slice(0, 3)).map((item) => (
-          <div key={item.id} className="flex justify-between items-center text-sm border-b py-1">
-            <div>
-              <p>{item.item} ({item.brand})</p>
-              {!isPayment && (
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => {
-                    const quantity = parseInt(e.target.value);
-                    setUpcomingOrders((prev) =>
-                      prev.map((o) =>
-                        o.orderId === order.orderId
-                          ? {
-                              ...o,
-                              items: o.items.map((i) =>
-                                i.id === item.id ? { ...i, quantity } : i
-                              ),
-                            }
-                          : o
-                      )
-                    );
-                  }}
-                  className="w-12 border rounded px-1 text-xs"
-                />
-              )}
-            </div>
-            {!isPayment && (
-              <Trash
-                className="w-3 h-3 text-red-400 cursor-pointer"
-                onClick={() => deleteItem(order.orderId, item.id)}
-              />
-            )}
+  const OrderCard = ({ order }) => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-semibold text-gray-900">{order.orderNumber}</h3>
+          <p className="text-sm text-gray-500">{order.distributor?.businessName || order.distributorId}</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium border`}>
+            <span className="capitalize">{order.status}</span>
           </div>
-        ))}
-        {order.items.length > 3 && (
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="flex items-center space-x-2">
+          <Package className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gtSelectedOrderray-600">{order.itemCount || (order.items ? order.items.length : 0)} items</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <DollarSign className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-600">₹{order.totalAmount?.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Calendar className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={async () => {
+            const res = await API.get('orders/retailer/orders');
+      setOrders(res.data.data || []);
+            setSelectedOrder(res.data.data || []);
+            setShowOrderDetails(true);
+          }}
+          className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+        >
+          <Eye className="w-4 h-4" />
+          <span>View</span>
+        </button>
+        {order.status === 'processing' && (
           <button
-            className="text-xs text-blue-500 mt-1"
-            onClick={() => toggleExpand(order.orderId)}
+            onClick={() => handleCompleteOrder(order.id)}
+            className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
           >
-            {expandedCards[order.orderId] ? "View Less" : "View More"}
+            <CheckCircle className="w-4 h-4" />
+            <span>Complete</span>
           </button>
         )}
-        <p className="mt-2 text-sm font-semibold">Total: ₹{calculateTotal(order.items)}</p>
-        <p className="text-xs text-gray-500">Order ID: {order.orderId}</p>
-        {!isPayment ? (
-          <Check
-            className="w-5 h-5 text-green-600 cursor-pointer mt-2"
-            onClick={() => moveToPayment(order.orderId)}
-          />
-        ) : (
-          <div className="flex gap-2 mt-2">
-            {["cash", "upi", "credit"].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => handlePayment(order.orderId, mode)}
-                className="text-xs px-2 py-1 bg-black text-white rounded-full"
-              >
-                {mode.toUpperCase()}
-              </button>
-            ))}
-          </div>
+        {order.status === 'pending' && (
+          <button
+            onClick={() => handleCancelOrder(order.id, prompt("Reason for cancellation?"))}
+            className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+          >
+            <XCircle className="w-4 h-4" />
+            <span>Cancel</span>
+          </button>
+        )}
+        {order.status === 'modified' && (
+          <>
+            <button
+              onClick={() => handleApproveModifiedOrder(order.id, true)}
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+            >
+              <Check className="w-4 h-4" />
+              <span>Approve</span>
+            </button>
+            <button
+              onClick={() => handleApproveModifiedOrder(order.id, false)}
+              className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+              <span>Reject</span>
+            </button>
+          </>
         )}
       </div>
     </div>
   );
 
-  const handleOrderInput = (field, value) => {
-    setNewOrder((prev) => ({ ...prev, [field]: value }));
-  };
+  const CreateOrderModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">Create New Order</h2>
+            <button
+              onClick={() => setShowCreateOrder(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <XCircle className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Distributor
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={createOrderData.distributorId}
+                onChange={e => setCreateOrderData(d => ({ ...d, distributorId: e.target.value }))}
+              >
+                <option value="">Select distributor</option>
+                {distributors.map(d => (
+                  <option key={d.id} value={d.id}>{d.businessName}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add Products
+              </label>
+              {/* You can implement a product selection UI here */}
+              <div className="border border-gray-300 rounded-lg p-4">
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Product selection interface would go here
+                </p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notes (Optional)
+              </label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows="3"
+                placeholder="Add any special instructions..."
+                value={createOrderData.notes}
+                onChange={e => setCreateOrderData(d => ({ ...d, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex space-x-3 mt-6">
+            <button
+              onClick={() => setShowCreateOrder(false)}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateOrder}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Send Order Request"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-  const handleAddNewOrder = () => {
-    if (!newOrder.customerName) {
-      alert("Please enter customer name.");
-      return;
-    }
-    
-    const items = parsedItems.length > 0 ? parsedItems : [
-      { id: Date.now(), item: "Sample Product", brand: "Brand X", quantity: 1, rate: 100 }
-    ];
-    
-    const orderWithItems = {
-      ...newOrder,
-      items: items
-    };
-    
-    setUpcomingOrders((prev) => [...prev, orderWithItems]);
-    setShowOrderModal(false);
-    setNewOrder({ customerName: '', orderId: '', items: [] });
-    setParsedItems([]);
-    setTranscript('');
-  };
-
-  return (
-    <div className="p-6 space-y-8 bg-white min-h-screen">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Shop Dashboard</h1>
+  // 6-digit code prompt modal
+  const CodePromptModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-center">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Confirmation Code</h2>
+        <p className="mb-4">Share this 6-digit code with your distributor. They will need it to complete the order:</p>
+        <div className="text-3xl font-bold tracking-widest text-blue-700 mb-6">{sixDigitCode}</div>
         <button
-          onClick={() => setShowOrderModal(true)}
-          className="flex items-center bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
+          onClick={() => setShowCodePrompt(false)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          <PlusCircle className="mr-2 w-4 h-4" /> Create Order
+          Close
         </button>
       </div>
+    </div>
+  );
 
-      {showOrderModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black"
-              onClick={() => setShowOrderModal(false)}
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-semibold mb-4">Take Order</h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Customer Name"
-                className="w-full px-3 py-2 border rounded"
-                value={newOrder.customerName}
-                onChange={(e) => handleOrderInput("customerName", e.target.value)}
-              />
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  placeholder="Order ID (Auto-generated)"
-                  className="w-full px-3 py-2 border rounded bg-gray-100"
-                  value={newOrder.orderId}
-                  readOnly
-                />
-              </div>
-              
-              <div className="relative">
-                <textarea
-                  placeholder="Enter order details or use voice input..."
-                  className="w-full px-3 py-2 border rounded h-32"
-                  value={transcript}
-                  onChange={(e) => setTranscript(e.target.value)}
-                ></textarea>
-                
-                <div className="flex justify-between mt-2">
-                  {isListening ? (
-                    <button
-                      onClick={stopListening}
-                      className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                    >
-                      <MicOff className="mr-1 w-4 h-4" /> Stop Listening
-                    </button>
-                  ) : (
-                    <button
-                      onClick={startListening}
-                      className="flex items-center bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      <Mic className="mr-1 w-4 h-4" /> Start Listening
-                    </button>
-                  )}
-                  
-                  <button
-  onClick={() => {
-    try {
-      const parsed = parseMultipleOrders(transcript);
-      console.log("Parsed items:", parsed);
-      
-      // Map the parsed items to the format expected by your app
-      const mappedItems = parsed.map(parsedItem => {
-        // Try to find a matching product in the database
-        const matchingProduct = productDatabase.find(
-          product => product.item.toLowerCase().includes(parsedItem.item.toLowerCase()) ||
-                    parsedItem.item.toLowerCase().includes(product.item.toLowerCase())
-        );
-        
-        return {
-          id: Date.now() + Math.floor(Math.random() * 1000),
-          item: matchingProduct ? matchingProduct.item : parsedItem.item,
-          brand: matchingProduct ? matchingProduct.brand : "Unknown",
-          quantity: parsedItem.quantity || 1,
-          rate: matchingProduct ? matchingProduct.rate : 100, // Default price if not found
-          unit: parsedItem.unit || "unit"
-        };
-      });
-      
-      setParsedItems(mappedItems);
-    } catch (error) {
-      console.error("Error parsing order:", error);
-      alert("Could not parse the order. Please try again or enter manually.");
-    }
-  }}
-  className="bg-gray-200 text-gray-800 px-3 py-1 rounded hover:bg-gray-300"
->
-  Parse Order
-</button>
-                </div>
-              </div>
-              
-              {parsedItems.length > 0 && (
-                <div className="border p-3 rounded bg-gray-50">
-                  <h3 className="text-sm font-semibold mb-2">Parsed Items:</h3>
-                  <ul className="text-sm">
-                    {parsedItems.map((item, index) => (
-                      <li key={index} className="flex justify-between mb-1">
-                        <span>{item.quantity}x {item.item} ({item.brand})</span>
-                        <span>₹{item.rate * item.quantity}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 text-right text-sm font-semibold">
-                    Total: ₹{calculateTotal(parsedItems)}
-                  </div>
-                </div>
-              )}
-              
+  // Filtered orders
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = (order.orderNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.distributor?.businessName || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'all' || order.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
+            <div className="flex items-center space-x-4">
               <button
-                onClick={handleAddNewOrder}
-                className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Add Order
+                <Bell className="w-5 h-5" />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setShowCreateOrder(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Order</span>
               </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Upcoming Orders</h2>
-        <div className="flex items-center gap-2 mb-2">
-          <button
-            onClick={() => setSortMode(sortMode === "asc" ? "desc" : "asc")}
-            className="flex items-center bg-gray-200 px-3 py-1 text-sm rounded hover:bg-gray-300"
-          >
-            Sort by Total {sortMode === "asc" ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />}
-          </button>
-        </div>
-        <div className="flex overflow-x-auto pb-2">
-          {upcomingOrders.length === 0 ? (
-            <p className="text-gray-500">No upcoming orders.</p>
-          ) : (
-            <div className="flex">
-              {sortedUpcomingOrders.map((order) => renderOrderCard(order))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filters and Search */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+              {['all', 'pending', 'processing', 'modified', 'completed'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === tab
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Payment Section</h2>
-        <div className="flex overflow-x-auto pb-2">
-          {paymentOrders.length === 0 ? (
-            <p className="text-gray-500">No orders in payment section.</p>
-          ) : (
-            <div className="flex">
-              {paymentOrders.map((order) => renderOrderCard(order, true))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <button
-          onClick={() => setShowReports(!showReports)}
-          className="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
-        >
-          <FileText className="inline-block mr-2" /> Reports
-        </button>
-        {showReports && (
-          <div className="mt-4 border p-4 rounded-xl bg-gray-100">
-            <h3 className="text-lg font-semibold mb-2">Business Summary</h3>
-            <p>Total Revenue Today: ₹{calculateRevenue()}</p>
-            <p>Profit Today: ₹{calculateProfit()}</p>
-            <p>Monthly Revenue: ₹{calculateRevenue()}</p>
-            <p>Monthly Profit: ₹{calculateProfit()}</p>
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Completed Orders</h4>
-              {completedOrders.length === 0 ? (
-                <p className="text-gray-500">No completed orders.</p>
-              ) : (
-                <ul className="text-sm text-gray-700 space-y-2">
-                  {completedOrders.map((order) => (
-                    <li key={order.orderId}>
-                      <strong>{order.customerName || "Custom"}</strong> - #{order.orderId} - ₹
-                      {calculateTotal(order.items)} - {order.mode.toUpperCase()} on {order.date} at {order.time}
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
+        </div>
+
+        {/* Orders List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredOrders.map(order => (
+            <OrderCard key={order.id} order={order} />
+          ))}
+        </div>
+
+        {filteredOrders.length === 0 && (
+          <div className="text-center py-12">
+            <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+            <p className="text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms' : 'Create your first order to get started'}
+            </p>
+          </div>
         )}
-      </section>
+      </div>
+
+      {/* Modals */}
+      {showCreateOrder && <CreateOrderModal />}
+      {showOrderDetails && selectedOrder && <OrderDetailsModal />}
+      {showCodePrompt && <CodePromptModal />}
     </div>
   );
 };
 
-export default Shop;
+export default RetailerOrders;
