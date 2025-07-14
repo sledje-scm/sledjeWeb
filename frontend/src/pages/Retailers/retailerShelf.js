@@ -440,6 +440,7 @@ const addAllToCart = () => {
   };
 
   const navigateToProduct = (product) => {
+    console.log("Navigating to product:", product);
     setActiveCategory(product.category);
     setActiveSubcategory(product.subcategory);
     setShowGlobalSearch(false);
@@ -613,6 +614,7 @@ const addAllToCart = () => {
       const res = await API.get('/inventory');
       const arr = Array.isArray(res.data) ? res.data : (res.data.inventory || []);
       setInventoryArr(arr);
+      setProductData(arr);
 
       // Build category structure from inventoryArr
       const structure = {};

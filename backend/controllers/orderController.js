@@ -63,11 +63,11 @@ export const createOrderRequest = async (req, res) => {
   }
 };
 
-// DISTRIBUTOR SIDE - Accept/Reject Order
+// DISTRIBUTOR SIDE - Accept/Reject Ordernpm start
 export const processOrderRequest = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { action, rejectionReason, modifications } = req.body; // action: 'accept' | 'reject' | 'modify'
+    const { action, rejectionReason, modifications } = req.body;
     const distributorId = req.user.id;
 
     const order = await Order.findOne({ 
@@ -86,11 +86,14 @@ export const processOrderRequest = async (req, res) => {
     if (action === 'accept') {
       // Validate stock and update final prices at acceptance time
       const finalItems = await validateStockAndUpdatePrices(order.items, distributorId);
-      const finalTotal = finalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       
-      // Reserve stock
-      await reserveStock(finalItems);
+      // Calculate final total using the validated items
+      const finalTotal = finalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+      // Reserve stock - Fix the typo here too
+      await reserveStock(finalItems); // Was 'finalaItems' - typo fixed
+
+      // Update order with plain objects
       order.items = finalItems;
       order.totalAmount = finalTotal;
       order.status = 'processing';
@@ -347,24 +350,38 @@ const validateStockAndUpdatePrices = async (items, distributorId) => {
   const finalItems = [];
   
   for (let item of items) {
+    // Convert Mongoose document to plain object first
+    const plainItem = item.toObject ? item.toObject() : item;
+    
     const product = await Product.findOne({ 
       distributorId,
-      'variants.sku': item.sku 
+      'variants.sku': plainItem.sku 
     });
     
-    const variant = product.variants.find(v => v.sku === item.sku);
-    
-    if (variant.stock < item.quantity) {
-      throw new Error(`Insufficient stock for SKU ${item.sku}. Available: ${variant.stock}, Requested: ${item.quantity}`);
+    if (!product) {
+      throw new Error(`Product with SKU ${plainItem.sku} not found`);
     }
     
-    // Update with current prices
+    const variant = product.variants.find(v => v.sku === plainItem.sku);
+    
+    if (!variant) {
+      throw new Error(`Variant with SKU ${plainItem.sku} not found`);
+    }
+    
+    if (variant.stock < plainItem.quantity) {
+      throw new Error(`Insufficient stock for SKU ${plainItem.sku}. Available: ${variant.stock}, Requested: ${plainItem.quantity}`);
+    }
+    
+    // Create a clean plain object
     finalItems.push({
-      ...item,
-      price: variant.sellingPrice, // Current price at acceptance time
       productId: product._id,
       productName: product.name,
-      variantName: variant.name
+      variantName: variant.name,
+      sku: plainItem.sku,
+      quantity: plainItem.quantity,
+      unit: plainItem.unit || 'box',
+      Ordered: plainItem.quantity,
+      price: variant.sellingPrice // Current price at acceptance time
     });
   }
   
@@ -374,16 +391,23 @@ const validateStockAndUpdatePrices = async (items, distributorId) => {
 // Reserve stock (reduce available stock)
 const reserveStock = async (items) => {
   for (let item of items) {
+    // Handle both plain objects and Mongoose documents
+    const sku = item.sku || (item.toObject && item.toObject().sku);
+    const quantity = item.quantity || (item.toObject && item.toObject().quantity);
+    
     await Product.updateOne(
-      { 'variants.sku': item.sku },
-      { $inc: { 'variants.$.stock': -item.quantity } }
+      { 'variants.sku': sku },
+      { $inc: { 'variants.$.stock': -quantity } }
     );
   }
 };
 
 // Apply distributor modifications
 const applyModifications = async (originalItems, modifications) => {
-  const modifiedItems = [...originalItems];
+  // Convert to plain objects first
+  const modifiedItems = originalItems.map(item => 
+    item.toObject ? item.toObject() : item
+  );
   
   modifications.forEach(mod => {
     const itemIndex = modifiedItems.findIndex(item => item.sku === mod.sku);
@@ -438,7 +462,7 @@ export const getOrdersList = async (req, res) => {
 
     const orders = await Order.find(filter)
       .select('orderNumber status totalAmount createdAt items')
-      .populate('retailerId', 'businessName phone email pincode')
+      .populate('retailerId', 'ownerName businessName phone email pincode')
       .populate('distributorId', 'ownerName phone email pincode')
       .sort({ createdAt: -1 })
       .limit(50);
@@ -447,11 +471,15 @@ export const getOrdersList = async (req, res) => {
       const base = {
         id: order._id,
         orderNumber: order.orderNumber,
+        items: order.items.map(item => ({
+       productId: item.productId,
+        })),
         status: order.status,
         totalAmount: order.totalAmount,
         itemCount: order.items.length,
         createdAt: order.createdAt,
       };
+      
 
       if (role === 'distributor') {
         return {
@@ -459,6 +487,8 @@ export const getOrdersList = async (req, res) => {
           retailer: order.retailerId ? {
             id: order.retailerId._id,
             name: order.retailerId.ownerName,
+            phone: order.retailerId.phone,
+            businessName: order.retailerId.businessName,
           } : null
         };
       } else {
@@ -467,6 +497,8 @@ export const getOrdersList = async (req, res) => {
           distributor: order.distributorId ? {
             id: order.distributorId._id,
             name: order.distributorId.ownerName,
+            phone: order.distributorId.phone,
+            businessName: order.distributorId.businessName,
           } : null
         };
       }

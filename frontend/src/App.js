@@ -219,9 +219,7 @@ function App() {
         <Route
           path="/login"
           element={
-            <NavbarWrap>
               <Login />
-            </NavbarWrap>
           }
         />
         <Route

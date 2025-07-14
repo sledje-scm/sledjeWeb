@@ -27,6 +27,7 @@ import API from "../../api"; // Adjust path as needed
 
 const DistributorOrderManagement = () => {
   const [orders, setOrders] = useState([]);
+  const [toast, setToast] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,7 +53,23 @@ const DistributorOrderManagement = () => {
     fetchOrders();
   }, []);
 
-
+useEffect(() => {
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      // Add a minimum 5-second delay
+      const [res] = await Promise.all([
+        API.get('/orders/distributor/order'),
+        new Promise(resolve => setTimeout(resolve, 5000))
+      ]);
+      setOrders(res.data.data || []);
+    } catch {
+      setOrders([]);
+    }
+    setLoading(false);
+  };
+  fetchOrders();
+}, []);
 
   const getStatusIcon = (status) => {
     const iconProps = { size: 20 };
@@ -108,6 +125,7 @@ const DistributorOrderManagement = () => {
   try {
     const res = await API.get(`/orders/distributor/orders/${order.id}`);
     setSelectedOrder(res.data.data);
+
     setActionType(action);
     setShowOrderModal(true);
   } catch (error) {
@@ -116,29 +134,111 @@ const DistributorOrderManagement = () => {
   setLoading(false);
 };
 
-    const processOrder = async () => {
-    setLoading(true);
-    try {
-      if (actionType === 'accept') {
-        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'accept' });
-      } else if (actionType === 'reject') {
-        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'reject', rejectionReason });
-      } else if (actionType === 'modify') {
-        await API.put(`orders/distributor/orders/${selectedOrder.id}/process`, { action: 'modify', modifications });
-      } else if (actionType === 'complete') {
-        await API.put(`orders/distributor/orders/${selectedOrder.id}/status`, { status: 'completed' });
-      }
-      // Refresh orders after action
-      const res = await API.get('orders/distributor/orders');
-      setOrders(res.data.data || []);
-      setShowOrderModal(false);
-      setRejectionReason('');
-    } catch (error) {
-      alert(error.response?.data?.message || "Action failed");
+  const processOrder = async () => {
+  setLoading(true);
+  try {
+    let successMessage = '';
+    
+    if (actionType === 'accept') {
+      await API.put(`orders/distributor/orders/${selectedOrder._id}/process`, { action: 'accept' });
+      successMessage = `Order from ${selectedOrder.retailer.businessName} has been accepted successfully!`;
+    } else if (actionType === 'reject') {
+      await API.put(`orders/distributor/orders/${selectedOrder._id}/process`, { action: 'reject', rejectionReason });
+      successMessage = `Order from ${selectedOrder.retailer.businessName} has been rejected.`;
+    } else if (actionType === 'modify') {
+      await API.put(`orders/distributor/orders/${selectedOrder._id}/process`, { action: 'modify', modifications });
+      successMessage = `Modification request sent for order from ${selectedOrder.retailer.businessName}.`;
+    } else if (actionType === 'complete') {
+      await API.put(`orders/distributor/orders/${selectedOrder._id}/status`, { status: 'completed' });
+      successMessage = `Order from ${selectedOrder.retailer.businessName} marked as completed!`;
     }
-    setLoading(false);
-  };
+    
+    // Refresh orders after action
+    const res = await API.get('orders/distributor/order');
+    setOrders(res.data.data || []);
+    setShowOrderModal(false);
+    setRejectionReason('');
+    
+    // Show success toast
+    setToast({ message: successMessage, type: 'success' });
+    
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || "Action failed. Please try again.";
+    setToast({ message: errorMessage, type: 'error' });
+  }
+  setLoading(false);
+};
   
+const Toast = ({ message, type, onClose }) => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(onClose, 300); // Wait for fade out animation
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 300);
+  };
+
+  return (
+    <div className={`fixed top-6 right-6 z-50 transition-all duration-300 transform ${
+      isVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+    }`}>
+      <div className={`relative flex items-center space-x-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-sm border-l-4 min-w-[320px] ${
+        type === 'success' 
+          ? 'bg-white/95 border-l-green-500 shadow-green-500/20' 
+          : type === 'error' 
+          ? 'bg-white/95 border-l-red-500 shadow-red-500/20' 
+          : 'bg-white/95 border-l-blue-500 shadow-blue-500/20'
+      }`}>
+        {/* Icon with background glow */}
+        <div className={`flex-shrink-0 p-2 rounded-full ${
+          type === 'success' 
+            ? 'bg-green-100 shadow-green-200/50' 
+            : type === 'error' 
+            ? 'bg-red-100 shadow-red-200/50' 
+            : 'bg-blue-100 shadow-blue-200/50'
+        }`}>
+          {type === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
+          {type === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
+          {type === 'info' && <AlertTriangle className="w-5 h-5 text-blue-600" />}
+        </div>
+        
+        {/* Message */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 leading-relaxed">
+            {message}
+          </p>
+        </div>
+        
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="flex-shrink-0 p-1.5 rounded-full hover:bg-gray-100 transition-colors duration-200 group"
+          aria-label="Close notification"
+        >
+          <X className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+        </button>
+        
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+          <div className={`h-full rounded-b-xl transition-all duration-[4000ms] ease-linear ${
+            type === 'success' 
+              ? 'bg-green-500' 
+              : type === 'error' 
+              ? 'bg-red-500' 
+              : 'bg-blue-500'
+          } ${isVisible ? 'w-0' : 'w-full'}`}></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
   const OrderCard = ({ order }) => {
     const urgency = getUrgencyLevel(order.createdAt);
@@ -151,7 +251,7 @@ const DistributorOrderManagement = () => {
               <ShoppingCart className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{order.retailer.name}</h3>
+              <h3 className="font-semibold text-gray-900">{order.retailer.businessName}</h3>
               <p className="text-sm text-gray-500">{order.orderNumber}</p>
             </div>
           </div>
@@ -354,11 +454,11 @@ const DistributorOrderManagement = () => {
                       <tr key={index} className="border-b border-gray-100">
                         <td className="py-3 px-4">
                           <div>
-                            <div className="font-medium text-gray-900">{item.productName}</div>
+                            <div className="font-medium text-gray-900">{item.productName}-{item.variantName}</div>
                             <div className="text-sm text-gray-500">per {item.unit}</div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">{item.sku}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{item.variantSku}</td>
                         <td className="py-3 px-4 text-right">
                           {actionType === 'modify' ? (
                             <input
@@ -370,17 +470,17 @@ const DistributorOrderManagement = () => {
                             <span className="font-medium">{item.quantity}</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-right">₹{item.price}</td>
+                        <td className="py-3 px-4 text-right">₹{item.variantSellingPrice}</td>
                         <td className="py-3 px-4 text-right">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             item.stock < item.quantity ? 'bg-red-100 text-red-800' : 
                             item.stock < item.quantity * 2 ? 'bg-yellow-100 text-yellow-800' : 
                             'bg-green-100 text-green-800'
                           }`}>
-                            {item.stock} available
+                            {item.variantStock} available
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right font-medium">₹{(item.quantity * item.price).toLocaleString()}</td>
+                        <td className="py-3 px-4 text-right font-medium">₹{(item.quantity * item.variantSellingPrice).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -519,77 +619,46 @@ const DistributorOrderManagement = () => {
         </div>
 
         {/* Order Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Pending Orders</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {orders.filter(o => o.status === 'pending').length}
-                </p>
-              </div>
-            </div>
+       
+
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Truck className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Processing</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {orders.filter(o => o.status === 'processing').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {orders.filter(o => o.status === 'completed').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              
-              <div className="ml-4">
-                <p className="text-sm text-gray-600">Revenue Today</p>
-                <p className="text-2xl font-bold text-gray-900">₹{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+       )}
 
         {/* Orders List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredOrders.map(order => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12">
-            <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-            <p className="text-gray-500">
-              {searchTerm ? 'Try adjusting your search terms' : `No ${activeTab} orders at the moment`}
-            </p>
+        {!loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredOrders.map(order => (
+              <OrderCard key={order.id} order={order} />
+            ))}
           </div>
         )}
+  
+
+        {/* No orders message */}
+        {!loading && filteredOrders.length === 0 && (
+         <div className="text-center py-12">
+        <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+        <p className="text-gray-500">
+        {searchTerm ? 'Try adjusting your search terms' : `No ${activeTab} orders at the moment`}
+        </p>
+        </div>
+        )}
+       
       </div>
 
       {/* Modal */}
       {showOrderModal && <OrderModal />}
+      {toast && (
+     <Toast
+       message={toast.message}
+       type={toast.type}
+       onClose={() => setToast(null)}
+     />
+)}
     </div>
   );
 };
