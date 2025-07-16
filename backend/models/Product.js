@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const VariantSchema = new mongoose.Schema({
   id: { 
-    type: Number, 
+    type: String, 
     required: true 
   },
   name: { 
@@ -29,6 +29,14 @@ const VariantSchema = new mongoose.Schema({
     type: String, 
     required: true, 
     unique: true 
+  },
+  description: { 
+    type: String, 
+    default: 'No description provided' 
+  },
+  image: { 
+    type: String, 
+    default: 'https://via.placeholder.com/150' 
   }
 });
 
@@ -38,8 +46,13 @@ const ProductSchema = new mongoose.Schema({
     ref: 'Distributor', 
     required: true 
   },
+  distributorships: {
+    type: [String],
+    enum: ['Groceries', 'Beverages', 'Personal Care'],
+    required: true
+  },
   id: { 
-    type: Number, 
+    type: String, 
     required: true 
   },
   name: { 

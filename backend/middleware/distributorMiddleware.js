@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Retailer from '../models/Retailer.js';
+import Distributor from '../models/Distributor.js';
 
 /**
  * Authentication middleware for verifying JWT tokens
@@ -22,15 +22,15 @@ export const authenticate = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Find retailer in database
-    const retailer = await Retailer.findById(decoded.id).select('-password');
-    if (!retailer) {
-      return res.status(401).json({ message: 'Retailer not found' });
+    // Find distributor in database
+    const distributor = await Distributor.findById(decoded.id).select('-password');
+    if (!distributor) {
+      return res.status(401).json({ message: 'distributor not found' });
     }
     
-    // Add retailer to request object
-    req.user = retailer;
-    req.user.role = 'retailer'; // Set role for authorization checks
+    // Add distributor to request object
+    req.user = distributor;
+    req.user.role = 'distributor'; // Set role for authorization checks
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -46,7 +46,7 @@ export const authenticate = async (req, res, next) => {
 
 /**
  * Role-based authorization middleware
- * Checks if the authenticated retailer has the required role
+ * Checks if the authenticated distributor has the required role
  */
 export const authorize = (...roles) => {
   return (req, res, next) => {
