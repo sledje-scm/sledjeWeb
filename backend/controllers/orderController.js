@@ -90,8 +90,8 @@ export const processOrderRequest = async (req, res) => {
       // Calculate final total using the validated items
       const finalTotal = finalItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-      // Reserve stock - Fix the typo here too
-      await reserveStock(finalItems); // Was 'finalaItems' - typo fixed
+      // Reserve stock
+      await reserveStock(finalItems);
 
       // Update order with plain objects
       order.items = finalItems;
@@ -154,16 +154,22 @@ export const processOrderRequest = async (req, res) => {
     } else if (action === 'modify') {
       // Handle partial fulfillment or quantity modifications
       const modifiedItems = await applyModifications(order.items, modifications);
+      
+      console.log("Applying modifications:", modifications);
+      console.log("Original items:", order.items);
+      console.log("Modified items:", modifiedItems);
+      
       const modifiedTotal = modifiedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       
       order.items = modifiedItems;
       order.totalAmount = modifiedTotal;
+      console.log("Modified total amount:", modifiedTotal);
       order.status = 'modified';
       order.notes = order.notes ? `${order.notes}\n\nOrder modified by distributor` : 'Order modified by distributor';
       
       await order.save();
 
-      // Notify retailer of modifications (they need to re-approve)
+      // Enhanced notification with modification details
       await createNotification({
         recipientId: order.retailerId,
         recipientType: 'Retailer',
@@ -173,7 +179,10 @@ export const processOrderRequest = async (req, res) => {
         data: { 
           orderNumber: order.orderNumber,
           modifiedTotal,
-          modifications 
+          originalTotal: modifications.summary?.originalTotal || 0,
+          totalDifference: modifications.summary?.totalDifference || 0,
+          changedItems: modifications.summary?.changedItems || [],
+          removedItems: modifications.summary?.removedItems || []
         }
       });
 
@@ -184,7 +193,9 @@ export const processOrderRequest = async (req, res) => {
           orderId: order._id,
           status: order.status,
           modifiedTotal,
-          modifications
+          originalTotal: modifications.summary?.originalTotal || 0,
+          totalDifference: modifications.summary?.totalDifference || 0,
+          modifications: modifications.summary
         }
       });
     }
@@ -194,6 +205,118 @@ export const processOrderRequest = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+// IMPROVED: Apply distributor modifications
+// IMPROVED: Apply distributor modifications with price validation
+const applyModifications = async (originalItems, modifications) => {
+  try {
+    // Convert to plain objects first
+    const modifiedItems = originalItems.map(item => 
+      item.toObject ? item.toObject() : { ...item }
+    );
+    console.log("Original items:", modifiedItems);
+    console.log("Modifications received:", modifications);
+
+    // Validate the modifications structure
+    if (!modifications || !modifications.items || !Array.isArray(modifications.items)) {
+      throw new Error('Invalid modifications structure');
+    }
+
+    // Apply modifications based on the data structure you're sending
+    for (const mod of modifications.items) {
+      // Find item by productId and variantId (more reliable than SKU)
+      const itemIndex = modifiedItems.findIndex(item => 
+        item.productId?.toString() === mod.productId?.toString() ||
+        item.sku === mod.sku // fallback to SKU matching
+      );
+
+      if (itemIndex === -1) {
+        console.warn(`Item not found for modification:`, mod);
+        continue;
+      }
+
+      // Handle item removal first
+      if (mod.remove === true || mod.newQuantity === 0) {
+        modifiedItems.splice(itemIndex, 1);
+        continue;
+      }
+
+      // Apply quantity changes
+      if (mod.newQuantity !== undefined) {
+        // Validate stock availability and get current price for the new quantity
+        const product = await Product.findOne({ 
+          _id: mod.productId,
+          'variants.sku': modifiedItems[itemIndex].sku 
+        });
+
+        if (product) {
+          const variant = product.variants.find(v => v.sku === modifiedItems[itemIndex].sku);
+          if (variant) {
+            // Check stock availability
+            if (variant.stock < mod.newQuantity) {
+              throw new Error(`Insufficient stock for ${modifiedItems[itemIndex].productName}. Available: ${variant.stock}, Requested: ${mod.newQuantity}`);
+            }
+            
+            // Update price to current selling price
+            modifiedItems[itemIndex].price = variant.sellingPrice;
+          } else {
+            throw new Error(`Variant not found for product ${modifiedItems[itemIndex].productName}`);
+          }
+        } else {
+          throw new Error(`Product not found for ${modifiedItems[itemIndex].productName}`);
+        }
+
+        modifiedItems[itemIndex].quantity = mod.newQuantity;
+        modifiedItems[itemIndex].Ordered = mod.newQuantity;
+      }
+    }
+
+    // Filter out items with zero quantity
+    const finalItems = modifiedItems.filter(item => item.quantity > 0);
+
+    if (finalItems.length === 0) {
+      throw new Error('Cannot process order with no items');
+    }
+
+    // CRITICAL: Ensure all remaining items have valid prices
+    for (const item of finalItems) {
+      if (!item.price || item.price <= 0) {
+        // Fetch current price if missing or invalid
+        const product = await Product.findOne({ 
+          _id: item.productId,
+          'variants.sku': item.sku 
+        });
+
+        if (product) {
+          const variant = product.variants.find(v => v.sku === item.sku);
+          if (variant && variant.sellingPrice > 0) {
+            item.price = variant.sellingPrice;
+            console.log(`Updated price for ${item.productName}: ${item.price}`);
+          } else {
+            throw new Error(`Valid price not found for ${item.productName}`);
+          }
+        } else {
+          throw new Error(`Product not found for price update: ${item.productName}`);
+        }
+      }
+    }
+
+    // Log final items with prices for debugging
+    console.log("Final items with prices:", finalItems.map(item => ({
+      productName: item.productName,
+      sku: item.sku,
+      quantity: item.quantity,
+      price: item.price,
+      total: item.price * item.quantity
+    })));
+
+    return finalItems;
+
+  } catch (error) {
+    console.error('Error applying modifications:', error);
+    throw error;
   }
 };
 
@@ -401,28 +524,36 @@ const reserveStock = async (items) => {
     );
   }
 };
+export const validateModificationRequest = (modifications) => {
+  const errors = [];
 
-// Apply distributor modifications
-const applyModifications = async (originalItems, modifications) => {
-  // Convert to plain objects first
-  const modifiedItems = originalItems.map(item => 
-    item.toObject ? item.toObject() : item
-  );
-  
-  modifications.forEach(mod => {
-    const itemIndex = modifiedItems.findIndex(item => item.sku === mod.sku);
-    if (itemIndex !== -1) {
-      if (mod.newQuantity !== undefined) {
-        modifiedItems[itemIndex].quantity = mod.newQuantity;
-        modifiedItems[itemIndex].Ordered = mod.newQuantity;
-      }
-      if (mod.remove) {
-        modifiedItems.splice(itemIndex, 1);
+  if (!modifications || typeof modifications !== 'object') {
+    errors.push('Modifications object is required');
+    return errors;
+  }
+
+  if (!modifications.items || !Array.isArray(modifications.items)) {
+    errors.push('Modifications must contain an items array');
+    return errors;
+  }
+
+  modifications.items.forEach((item, index) => {
+    if (!item.productId && !item.sku) {
+      errors.push(`Item ${index + 1}: productId or sku is required`);
+    }
+
+    if (item.newQuantity !== undefined) {
+      if (typeof item.newQuantity !== 'number' || item.newQuantity < 0) {
+        errors.push(`Item ${index + 1}: newQuantity must be a non-negative number`);
       }
     }
+
+    if (item.remove !== undefined && typeof item.remove !== 'boolean') {
+      errors.push(`Item ${index + 1}: remove must be a boolean`);
+    }
   });
-  
-  return modifiedItems;
+
+  return errors;
 };
 
 // Simple notification helper

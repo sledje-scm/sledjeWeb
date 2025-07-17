@@ -614,7 +614,7 @@ const addAllToCart = () => {
       const res = await API.get('/inventory');
       const arr = Array.isArray(res.data) ? res.data : (res.data.inventory || []);
       setInventoryArr(arr);
-      setProductData(arr);
+     
 
       // Build category structure from inventoryArr
       const structure = {};
@@ -1371,6 +1371,7 @@ const addAllToCart = () => {
                     variantId: variant.id,
                     productName: product.name,
                     productIcon: product.icon,
+                    sku: variant.sku,
                     variantName: variant.name,
                     price: variant.sellingPrice,
                     quantity,
@@ -1387,7 +1388,29 @@ const addAllToCart = () => {
               alert("Please select quantity for at least one variant");
               return;
             }
-            setCartItems(prev => [...prev, ...itemsToAdd]);
+            setCartItems(prevCart => {
+    const updatedCart = [...prevCart];
+
+    itemsToAdd.forEach(newItem => {
+      const existingIndex = updatedCart.findIndex(
+        item => item.productId === newItem.productId && item.variantId === newItem.variantId
+      );
+
+      if (existingIndex !== -1) {
+        const existingItem = updatedCart[existingIndex];
+        const newQuantity = existingItem.quantity + newItem.quantity;
+        updatedCart[existingIndex] = {
+          ...existingItem,
+          quantity: newQuantity,
+          totalPrice: newQuantity * existingItem.price,
+        };
+      } else {
+        updatedCart.push(newItem);
+      }
+    });
+
+    return updatedCart;
+  });
             // Reset quantities
             const resetQuantities = {};
             modalProducts.forEach(product => {

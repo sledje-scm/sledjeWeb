@@ -1,18 +1,18 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
+// Hierarchical Object Category Schema
 const CategorySchema = new mongoose.Schema({
-  name: {
+  main: {
     type: String,
     required: true,
-    unique: true,
-    trim: true
+    enum: ['Groceries', 'Beverages', 'Personal Care']
   },
-  description: {
+  sub: {
     type: String,
-    trim: true
+    required: true
+  },
+  level3: {
+    type: String,
+    required: false  // For deeper nesting if needed
   }
-}, {
-  timestamps: true
 });
-
-module.exports = mongoose.model('Category', CategorySchema);
