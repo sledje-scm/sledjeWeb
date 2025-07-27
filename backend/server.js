@@ -9,6 +9,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import {connectDB} from './config/db.js';
 import connectionRoutes from './routes/connectionRoutes.js';
+import authRoutes from './routes/authRoutes.js'; // ✅ ADD THIS
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -23,6 +24,7 @@ app.use('/api/connections', connectionRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/auth', authRoutes);
 
 
 
