@@ -21,7 +21,7 @@ export const addProduct = async (req, res) => {
       distributorId: req.user._id,
       distributorships,
       category,
-      subcategory,
+      subCategory,
       variants,
     });
 
