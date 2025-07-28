@@ -1,4 +1,3 @@
-import e from 'express';
 import Retailer from '../models/Retailer.js';
 import Product from '../models/Product.js';
 
@@ -21,7 +20,7 @@ export const addProduct = async (req, res) => {
       distributorId: req.user._id,
       distributorships,
       category,
-      subCategory,
+      subcategory, // ✅ fixed casing
       variants,
     });
 
@@ -37,7 +36,7 @@ export const addProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   const { productId } = req.params;
-  const { name, icon, distributor, category, subcategory, variants } = req.body;
+  const { name, icon, distributorships, category, subcategory, variants } = req.body;
 
   try {
     const product = await Product.findById(productId);
@@ -47,7 +46,7 @@ export const updateProduct = async (req, res) => {
 
     product.name = name || product.name;
     product.icon = icon || product.icon;
-    product.distributor = distributor || product.distributor;
+    product.distributorships = distributorships || product.distributorships;
     product.category = category || product.category;
     product.subcategory = subcategory || product.subcategory;
     product.variants = variants || product.variants;
@@ -95,7 +94,7 @@ export const getProducts = async (req, res) => {
     const query = { distributorId };
 
     if (category) query.category = category;
-    if (subcategory) query.subcategory = subcategory;
+    if (subcategory) query.subcategory = subcategory; // ✅ fixed casing
     if (search) query.name = { $regex: search, $options: "i" };
 
     const products = await Product.find(query);
