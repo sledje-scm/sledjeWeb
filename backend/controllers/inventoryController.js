@@ -26,7 +26,7 @@ export const getInventory = async (req, res) => {
         distributorId: product.distributorId._id, // Assuming distributorId is an ObjectId
         distributor: product.distributorId.ownerName, // Assuming distributor name is populated
         category: product.category,
-        subcategory: product.subCategory,
+        subcategory: product.subcategory,
         variants: product.variants.map(v => ({
           id: v.id,
           _id: v._id,
