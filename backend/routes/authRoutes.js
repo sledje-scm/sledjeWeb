@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import Retailer from '../models/retailerModel.js'; // Your existing model
+import Retailer from '../models/retailer.js'; // Your existing model
 
 const router = express.Router();
 
