@@ -6,7 +6,7 @@ import Product from '../models/Product.js';
  * Add a new product
  */
 export const addProduct = async (req, res) => {
-  const { id, name, icon, distributorships, category, variants } = req.body;
+  const { id, name, icon, distributorships, category, subcategory, variants } = req.body;
 
   try {
     const productExists = await Product.findOne({ id });
@@ -21,14 +21,13 @@ export const addProduct = async (req, res) => {
       distributorId: req.user._id,
       distributorships,
       category,
+      subcategory,
       variants,
     });
 
     res.status(201).json(product);
   } catch (error) {
     console.error('❌ Error adding product:', error.message);
-    console.error(error);
-
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -38,7 +37,7 @@ export const addProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   const { productId } = req.params;
-  const { name, icon, distributor, category, variants } = req.body;
+  const { name, icon, distributor, category, subcategory, variants } = req.body;
 
   try {
     const product = await Product.findById(productId);
@@ -50,22 +49,10 @@ export const updateProduct = async (req, res) => {
     product.icon = icon || product.icon;
     product.distributor = distributor || product.distributor;
     product.category = category || product.category;
-
-    // Update variants
-    const updatedVariants = variants || product.variants;
-    product.variants = updatedVariants;
+    product.subcategory = subcategory || product.subcategory;
+    product.variants = variants || product.variants;
 
     const updatedProduct = await product.save();
-
-    // Sync inventory for updated variants
-    // for (const variant of updatedVariants) {
-    //   await Inventory.findOneAndUpdate(
-    //     { productId: product._id, variantId: variant._id },
-    //     { stock: variant.stock || 0 },
-    //     { upsert: true }
-    //   );
-    // }
-
     res.status(200).json(updatedProduct);
   } catch (error) {
     console.error('❌ Error updating product:', error.message);
@@ -93,26 +80,23 @@ export const deleteProduct = async (req, res) => {
   }
 };
 
-// GET /api/products?distributorId=xyz&category=abc&search=term
+/**
+ * Get products with optional filtering
+ * GET /api/products?distributorId=xyz&category=abc&subcategory=def&search=term
+ */
 export const getProducts = async (req, res) => {
-  console.log('Fetching products with query:', req.query);
-  console.log('Distributor ID:', req.query.distributorId);
   try {
-    const { distributorId } = req.query;
+    const { distributorId, category, subcategory, search } = req.query;
 
     if (!distributorId) {
       return res.status(400).json({ message: "Missing distributorId" });
     }
 
-    let query = { distributorId };
+    const query = { distributorId };
 
-    // if (category) {
-    //   query.category = category;
-    // }
-
-    // if (search) {
-    //   query.name = { $regex: search, $options: "i" }; // Case-insensitive search by name
-    // }
+    if (category) query.category = category;
+    if (subcategory) query.subcategory = subcategory;
+    if (search) query.name = { $regex: search, $options: "i" };
 
     const products = await Product.find(query);
     res.status(200).json(products);
@@ -128,15 +112,15 @@ export const getProducts = async (req, res) => {
  */
 export const getProductsForConnectedDistributors = async (req, res) => {
   try {
-    // Assuming req.user._id is the retailer's ID (from auth middleware)
     const retailer = await Retailer.findById(req.user._id);
     if (!retailer || !retailer.distributors || retailer.distributors.length === 0) {
       return res.json({ products: [] });
     }
-    // Fetch products for those distributors
+
     const products = await Product.find({
       distributorId: { $in: retailer.distributors }
     }).lean();
+
     res.json({ products });
   } catch (error) {
     console.error("❌ Error fetching connected distributors' products:", error.message);
