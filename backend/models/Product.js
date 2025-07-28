@@ -35,7 +35,7 @@ const ProductSchema = new mongoose.Schema({
 
 // Add indexing for faster queries
 ProductSchema.index({ category: 1 });
-ProductSchema.index({ subcategory: 1 }); // ✅ Optional: index for subcategory
+ProductSchema.index({ subCategory: 1 }); // ✅ Optional: index for subcategory
 ProductSchema.index({ name: 'text', distributor: 'text' });
 
 const Product = mongoose.model('Product', ProductSchema);
