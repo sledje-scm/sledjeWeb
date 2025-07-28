@@ -28,14 +28,14 @@ const ProductSchema = new mongoose.Schema({
   icon: { type: String, default: '📦' },
   category: { type: String, required: true },
 
-  subCategory: { type: String, default: 'General' },
+  subcategory: { type: String, default: 'General' },
 
   variants: [VariantSchema]
 }, { timestamps: true });
 
 // Add indexing for faster queries
 ProductSchema.index({ category: 1 });
-ProductSchema.index({ subCategory: 1 }); // ✅ Optional: index for subcategory
+ProductSchema.index({ subcategory: 1 }); // ✅ Optional: index for subcategory
 ProductSchema.index({ name: 'text', distributor: 'text' });
 
 const Product = mongoose.model('Product', ProductSchema);
