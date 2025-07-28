@@ -21,9 +21,15 @@ const retailerSchema = new mongoose.Schema(
       unique: true,
     },
     password: {
-      type: String,
-      required: true,
-    },
+    type: String,
+    required: function () {
+    return !this.googleId;
+        },
+     },
+      googleId: {
+        type: String,
+        unique: true,
+     },
     gstNumber: {
       type: String,
     },
@@ -55,7 +61,7 @@ const retailerSchema = new mongoose.Schema(
 
 // Encrypt password before saving
 retailerSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
 
@@ -63,6 +69,7 @@ retailerSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
 
 // Method to match entered password with hashed password
 retailerSchema.methods.matchPassword = async function (enteredPassword) {
