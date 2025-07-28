@@ -26,7 +26,7 @@ export const getInventory = async (req, res) => {
         distributorId: product.distributorId._id, // Assuming distributorId is an ObjectId
         distributor: product.distributorId.ownerName, // Assuming distributor name is populated
         category: product.category[0] || product.category, // Use first category level
-        subcategory: product.category[1] || product.category, // Use second category level
+        subcategory: product.subCategory || product.subCategory, // Use second category level
         variants: product.variants.map(v => ({
           id: v.id,
           _id: v._id,
